@@ -1,0 +1,66 @@
+<nav class="navbar fixed-top navbar-expand-lg navbar-light bg-light">
+  <div class="container-fluid">
+    <a class="navbar-brand" href="/">
+      Transparent Tokens
+    </a>
+    <button
+      class="navbar-toggler"
+      type="button"
+      data-bs-toggle="collapse"
+      data-bs-target="#navbarNavDropdown"
+      aria-controls="navbarNavDropdown"
+      aria-expanded="false"
+      aria-label="Toggle navigation"
+    >
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarNavDropdown">
+      <ul class="navbar-nav ms-auto">
+        <% if(title==="Home" && !currentUser){ %>
+        <li class="nav-item">
+          <a class="nav-link" aria-current="page" href="#top">Home</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="#features">Features</a>
+        </li>
+        <% } %> <% if (currentUser) { %>
+        <li class="nav-item">
+            <a class="nav-link" aria-current="page" href="/selfBalance">Balance</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" aria-current="page" href="/mint">Mint</a>
+        </li>
+        
+        <% } %> <% if (!currentUser) { %>
+        <li class="nav-item">
+          <a class="nav-link" href="/register"
+            ><button type="button" class="btn btn-outline-success btn-sm">
+              Login
+            </button></a
+          >
+        </li>
+        <% } %> <% if (currentUser) { %>
+        <li class="nav-item">
+          <a class="nav-link" href="/logout"
+            ><button class="btn btn-outline-success btn-sm">Sign out</button></a
+          >
+        </li>
+        <% } %>
+      </ul>
+    </div>
+  </div>
+  <div id="flash" class="flash"><%- include("../partials/flash") %></div>
+</nav>
+
+<!-- Display admin functionalities if user is admin
+<script>
+  // //get role from jwt
+  // const role = JSON.parse(atob(localStorage.token.split(".")[1])).role;
+  // console.log("ROLE",role);
+
+  // //TODO isso deveria ser feito usando ejs!
+  // //show admin functionalities
+  // if (role === "admin") {
+  //   if (typeof adminDropdown !== "undefined") adminDropdown.hidden = false;
+  // }
+</script>-->

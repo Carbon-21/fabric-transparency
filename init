@@ -1,0 +1,47 @@
+#!/bin/bash
+# Initialize Fabric blockchain (via microfab) using blockchain and deploy the chaincode (via deploy_chaincode.py). Use the configuration in the config directory and the chaincode inside the chaincode directory
+set -e
+MICROFAB_CFG_PATH=config/config.json
+DEPLOY_CC_SCRIPT=scripts/deploy_chaincode.py
+export FABRIC_CFG_PATH=$(pwd)/config
+
+echo "IMPORTANT: Before running this script, configure $MICROFAB_CFG_PATH and put your chaincode inside the chaincode directory."
+
+echo "Killing any docker container..."
+containers=$(docker ps -q)
+if [ ! -z "$containers" ]
+then
+  docker kill $containers
+fi
+
+docker network prune -f && docker volume prune -f
+sleep 2
+
+echo "Starting blockchain using $MICROFAB_CFG_PATH configuration..."
+export MICROFAB_CONFIG=$(cat $MICROFAB_CFG_PATH)
+docker run -d --name microfab --rm -p 8080:8080 -e MICROFAB_CONFIG ibmcom/ibp-microfab
+sleep 4
+
+echo "Creating wallet, gateways and msp directories..."
+# curl -s http://console.127-0-0-1.nip.io:8080/ak/api/v1/components | weft microfab -w ./wallets -p ./gateways -m ./msp -f
+# IMPORTANT: uncomment if you haven't installed weftility globally
+npm install @hyperledgendary/weftility
+curl -s http://console.127-0-0-1.nip.io:8080/ak/api/v1/components | npx weft microfab -w ./wallets -p ./gateways -m ./msp -f
+
+#Deploy chaincode
+python3 $DEPLOY_CC_SCRIPT || exit 1
+
+echo -e
+echo -e "\033[0;32mBlockchain up and running!\033[0m"
+echo -e
+
+
+### API ####
+cd api
+
+echo "Installing dependencies..."
+npm install
+
+echo -e "Initializing API..."
+node app
+

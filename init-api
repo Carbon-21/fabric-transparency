@@ -1,0 +1,10 @@
+#!/bin/bash
+
+cd api
+
+echo "Installing dependencies..."
+npm install
+
+echo -e "Initializing API..."
+node app
+
