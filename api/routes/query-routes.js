@@ -7,33 +7,38 @@ const queryController = require("../controllers/query-controller.js");
 
 const router = Router();
 
-//// UNAUTHENTICATED ROUTES ////
+// UNAUTHENTICATHED ROUTES
+router.get(
+  "/channels/:channel/chaincodes/:chaincode/getBlockchainTail",
+  [param("channel").trim().not().isEmpty().isString(), param("chaincode").trim().not().isEmpty().isString(), validateAll],
+  queryController.getBlockchainTail
+);
 
-///// AUTHENTICATED ROUTES /////
+router.get(
+  "/channels/:channel/chaincodes/:chaincode/getWorldState",
+  [param("channel").trim().not().isEmpty().isString(), param("chaincode").trim().not().isEmpty().isString(), validateAll],
+  queryController.getWorldState
+);
+
+router.get(
+  "/channels/:channel/chaincodes/:chaincode/getRangeOfBlocks",
+  [
+    param("channel").trim().not().isEmpty().isString(),
+    param("chaincode").trim().not().isEmpty().isString(),
+    query("min").trim().not().isEmpty().isString(),
+    query("max").trim().not().isEmpty().isString(),
+    validateAll,
+  ],
+  queryController.getRangeOfBlocks
+);
+
+// AUTHENTICATHED ROUTES
 router.use(checkAuth);
 
 router.get(
   "/channels/:channel/chaincodes/:chaincode/selfBalance",
   [param("channel").trim().not().isEmpty().isString(), param("chaincode").trim().not().isEmpty().isString(), query("tokenId").trim().not().isEmpty().isString(), validateAll],
   queryController.selfBalance
-);
-
-router.get(
-  "/channels/:channel/chaincodes/:chaincode/balance",
-  [param("channel").trim().not().isEmpty().isString(), param("chaincode").trim().not().isEmpty().isString(), query("tokenId").trim().not().isEmpty().isString(), query("tokenOwner").trim().not().isEmpty().isString(), query("tokenOwnerOrg").trim().not().isEmpty().isString(), validateAll],
-  queryController.balance
-);
-
-router.get(
-  "/channels/:channel/chaincodes/:chaincode/selfCollection",
-  [param("channel").not().isEmpty(), param("chaincode").not().isEmpty(), validateAll],
-  queryController.selfCollection
-);
-
-router.get(
-  "/channels/:channel/chaincodes/:chaincode/collection",
-  [param("channel").not().isEmpty(), param("chaincode").not().isEmpty(),query("tokenOwner").trim().not().isEmpty().isString(), query("tokenOwnerOrg").trim().not().isEmpty().isString(), validateAll],
-  queryController.collection
 );
 
 module.exports = router;

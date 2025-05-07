@@ -21,6 +21,8 @@ const authRoutes = require("./routes/auth-routes");
 const invokeRoutes = require("./routes/invoke-routes");
 const queryRoutes = require("./routes/query-routes");
 const frontRoutes = require("./routes/front-routes");
+const ipfsRoutes = require("./routes/ipfs-routes");
+
 
 ///// CONFIGS /////
 //express
@@ -42,6 +44,8 @@ const port = process.env.PORT;
 app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "views"));
 app.use(express.static(path.join(__dirname, "public")));
+
+global.__basedir = __dirname;
 
 //flash
 const sessionConfig = {
@@ -66,14 +70,23 @@ app.use((req, res, next) => {
 
 //home
 app.get("/", function (req, res) {
-  res.render("home", { title: "Home", cssPath: "css/home.css" });
+  res.render("transparency", { title: "Home", cssPath: "css/transparency.css" });
 });
 
+
 ///// ROUTES /////
+app.use("/ipfs", ipfsRoutes);
 app.use("/auth", authRoutes);
 app.use("/invoke", invokeRoutes);
 app.use("/query", queryRoutes);
 app.use("/", frontRoutes);
+
+//// IPFS publication ////
+// var cronJob = require("cron").CronJob;
+const { postTransparencyLog } = require("./controllers/ipfs-controller");
+//transparency log: regularly post blockchain's tail to the IPFS
+  // new cronJob(process.env.LOG_CRONTAB, postTransparencyLog, null, true);
+postTransparencyLog();
 
 ///// SERVER INIT /////
 app.listen(port, host);

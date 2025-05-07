@@ -33,7 +33,7 @@ async function login() {
       localStorage.setItem("token", response.token);
       localStorage.setItem("username", username);
       localStorage.setItem("org", org);
-      window.location.href = "/";
+      window.location.href = "/mint";
     } else {
       element =
         `<div class="alert alert-danger alert-dismissible fade show mb-3 mt-3" role="alert">` +
