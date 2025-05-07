@@ -15,6 +15,7 @@ const path = require("path");
 const logger = require("./util/logger");
 const cors = require("./middleware/cors");
 const error = require("./middleware/error");
+const { createAdmin } = require("./controllers/auth-crontroller");
 
 //routes
 const authRoutes = require("./routes/auth-routes");
@@ -81,18 +82,40 @@ app.use("/invoke", invokeRoutes);
 app.use("/query", queryRoutes);
 app.use("/", frontRoutes);
 
-//// IPFS publication ////
-// var cronJob = require("cron").CronJob;
-const { postTransparencyLog } = require("./controllers/ipfs-controller");
-//transparency log: regularly post blockchain's tail to the IPFS
-  // new cronJob(process.env.LOG_CRONTAB, postTransparencyLog, null, true);
-postTransparencyLog();
-
-///// SERVER INIT /////
-app.listen(port, host);
-logger.info("****************** SERVER STARTED ************************");
-logger.info("***************  http://%s:%s  ******************", host, port);
-
 ///// ERROR MIDDLEWARE /////
 //executed if any other middleware yields an error
 app.use(error);
+
+///// SERVER INIT /////
+//create admin accounts if needed and start the server
+createAdmin()
+  .then(() => {
+    app.listen(port, host);
+    logger.info("****************** SERVER STARTED ************************");
+    logger.info("***************  http://%s:%s  ******************", host, port);
+    // const httpsServer = https.createServer(options, app);
+    // httpsServer.listen(port, host, () => {
+    //   logger.info("****************** HTTPS SERVER STARTED ************************");
+    //   logger.info("***************  https://%s:%s  *******************", host, port);
+    // });
+    // postTransparencyLog();
+  })
+  .catch((err) => {
+    logger.fatal("Server couldn't be initialized:", err);
+  });
+
+//// IPFS publication ////
+// var cronJob = require("cron").CronJob;
+const { postTransparencyLog } = require("./controllers/ipfs-controller");
+postTransparencyLog();
+//transparency log: regularly post blockchain's tail to the IPFS
+  // new cronJob(process.env.LOG_CRONTAB, postTransparencyLog, null, true);
+
+///// SERVER INIT /////
+// app.listen(port, host);
+// logger.info("****************** SERVER STARTED ************************");
+// logger.info("***************  http://%s:%s  ******************", host, port);
+
+// ///// ERROR MIDDLEWARE /////
+// //executed if any other middleware yields an error
+// app.use(error);

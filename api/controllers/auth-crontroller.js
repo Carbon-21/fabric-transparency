@@ -23,6 +23,67 @@ exports.register = async (req, res, next) => {
 };
 
 //////////HELPER CALLS//////////
+//create two admins identities in the blockchain, admin and admin@admin.com. The latter is also created in the SQL DB
+//called on app initialization. No route assigned.
+exports.createAdmin = async () => {
+  logger.trace("Entered createAdmin controller");
+
+  const org = "Org1";
+
+  //get wallets' path for the given org and create wallet object
+  const walletPath = await helper.getWalletPath(org);
+  const wallet = await Wallets.newFileSystemWallet(walletPath);
+
+  //enroll an admin users if they doesn't exist yet
+  let adminIdentity = await wallet.get("admin");
+  if (!adminIdentity) {
+    logger.info("No admin identities found, creating them...");
+
+    //create "admin" identity in the blockchain
+    try {
+      const ccp = await helper.getCCP(org);
+      await helper.enrollAdmin(org, ccp);
+      adminIdentity = await wallet.get("admin");
+    } catch (err) {
+      logger.error(err);
+      return new HttpError(500);
+    }
+
+    // //create a second admin identity, admin@admin.com, both in the blockchain and in the DB
+    // //instantiate admin user in the DB
+    // const seed = generateSeed();
+    // let admin = { email: process.env.ADMIN_LOGIN, seed, org };
+    // try {
+    //   await models.users.create(admin);
+    // } catch (err) {
+    //   logger.error(err);
+    //   return new HttpError(500);
+    // }
+
+    // //PHS
+    // try {
+    //   const salt = hkdf(process.env.ADMIN_LOGIN, seed);
+    //   let password = await argon2.hash({ pass: process.env.ADMIN_PASSWORD, salt, hashLen: 32, type: argon2.ArgonType.Argon2id, time: 3, mem: 15625, parallelism: 1 });
+    //   password = password.hashHex;
+    //   admin.password = password;
+    // } catch (err) {
+    //   logger.error(err);
+    //   return new HttpError(500);
+    // }
+
+    // //update user on DB
+    // let response = await saveUserToDatabase(admin);
+    // if (!response) return new HttpError(500);
+
+    // //enroll user in the CA and save it in the wallet
+    // if (!(await enrollUserInCA(admin, "admin"))) return new HttpError(500);
+
+    logger.info("Successfully enrolled admin and admin@admin.com");
+  }
+  else {
+    logger.info("Admins already created, skipping creation...");
+  }
+};
 
 //register the user in the CA, enroll the user in the CA, and save the new identity into the wallet. Returns true if things went as expected.
 const enrollUserInCA = async (user, next) => {

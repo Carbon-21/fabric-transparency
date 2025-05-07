@@ -51,7 +51,7 @@ exports.getWorldState = async (req, res, next) => {
   const channel = req.params.channel;
 
   //connect to the channel and get the chaincode
-  const [chaincode, gateway] = await helper.getChaincode("Org1", channel, chaincodeName, "admin@admin.com", next);
+  const [chaincode, gateway] = await helper.getChaincode("Org1", channel, chaincodeName, "admin", next);
   if (!chaincode) return;
 
   //get balance
@@ -73,13 +73,36 @@ exports.getWorldState = async (req, res, next) => {
   }
 };
 
+//get world state
+//used on transparency log's crontab (thus local)
+exports.getWorldStateLocal = async (chaincodeName, channelName) => {
+  //connect to the channel and get the gateway
+  const [chaincode, gateway] = await helper.getChaincode("Org1", channelName, chaincodeName, "admin", null);
+
+  //get ws
+  try {
+    let result = await chaincode.evaluateTransaction("SmartContract:GetWorldState");
+
+    result = Buffer.from(result).toString();
+
+    //close communication channel
+    await gateway.disconnect();
+
+    //send OK response
+    logger.debug(`World state fetched!`);
+    return result;
+  } catch (err) {
+    return new HttpError(500, err);
+  }
+};
+
 //get last block
 exports.getBlockchainTail = async (req, res, next) => {
   const chaincodeName = req.params.chaincode;
   const channelName = req.params.channel;
 
   // //connect to the channel and get the
-  const [chaincode, gateway] = await helper.getChaincode("Org1", channelName, chaincodeName, "admin@admin.com", next);
+  const [chaincode, gateway] = await helper.getChaincode("Org1", channelName, chaincodeName, "admin", next);
 
   try {
     //use QSCC
@@ -117,7 +140,7 @@ exports.getBlockchainTail = async (req, res, next) => {
 //used on transparency log's crontab
 exports.getBlockchainTailLocal = async (chaincodeName, channelName) => {
   // //connect to the channel and get the
-  const [chaincode, gateway] = await helper.getChaincode("Org1", channelName, chaincodeName, "admin@admin.com", null);
+  const [chaincode, gateway] = await helper.getChaincode("Org1", channelName, chaincodeName, "admin", null);
 
   try {
     //use QSCC
@@ -154,7 +177,7 @@ exports.getRangeOfBlocks = async (req, res, next) => {
   let max = req.query.max;
 
   // //connect to the channel and get the
-  const [chaincode, gateway] = await helper.getChaincode("Org1", channelName, chaincodeName, "admin@admin.com", next);
+  const [chaincode, gateway] = await helper.getChaincode("Org1", channelName, chaincodeName, "admin", next);
 
   try {
     //use QSCC
@@ -167,10 +190,10 @@ exports.getRangeOfBlocks = async (req, res, next) => {
     const tailNumber = info.height.low - 1;
 
     //adjust initial block's number, if needed
-    if (min === "início") min = 0;
+    if (min === "beginning") min = 0;
 
     //get tail's number, if user requested it
-    if (max === "fim") max = tailNumber;
+    if (max === "end") max = tailNumber;
 
     //if requested range is out of boundaries or isn't int => error
     min = parseInt(min);
@@ -206,6 +229,12 @@ exports.getRangeOfBlocks = async (req, res, next) => {
 
 //encoded block info can be decoded to utf-8 or base64
 decodeBlockBuffers = (block) => {
+  // CC package id
+  if (block.data.data[0].payload.data.actions[0].payload.chaincode_proposal_payload.input.chaincode_spec.input.args[1])
+    block.data.data[0].payload.data.actions[0].payload.chaincode_proposal_payload.input.chaincode_spec.input.args[1] = Buffer.from(
+      block.data.data[0].payload.data.actions[0].payload.chaincode_proposal_payload.input.chaincode_spec.input.args[1]
+    ).toString("utf8");
+    
   block.header.previous_hash = Buffer.from(block.header.previous_hash).toString("base64");
   block.header.data_hash = Buffer.from(block.header.data_hash).toString("base64");
 

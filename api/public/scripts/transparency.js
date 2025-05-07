@@ -4,13 +4,13 @@ let asnjs = require("asn1.js");
 // Flash messages that are displayed to the user in case of success or failure of the transaction execution
 const successFlashMessage =
   `<div  id="flash-message" class="alert alert-success alert-dismissible fade show mb-3 mt-3" role="alert">` +
-  `Consulta realizada com sucesso` +
+  `Successful request` +
   `<button id="flash-button" type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>` +
   `</div>`;
 
 const failureFlashMessage =
   `<div class="alert alert-danger alert-dismissible fade show mb-3 mt-3" role="alert">` +
-  `Ocorreu um erro na consulta` +
+  `Failed request` +
   `<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>` +
   `</div>`;
 
@@ -158,14 +158,14 @@ window.checkBlockchain = async function () {
       // i === 3 ? (calculatedHash = "a1p4p41") : (calculatedHash = calculatedHash);
 
       //print hashes
-      checkedBlocksHtml += `Bloco ${i + response.min}, hash calculado pelo seu PC: ${calculatedHash}<br>`;
-      checkedBlocksHtml += `Bloco ${i + response.min + 1}, campo previous_hash: ${nextBlockPreviousHash}<br>`;
+      checkedBlocksHtml += `Block ${i + response.min}, hash calculated by your computer: ${calculatedHash}<br>`;
+      checkedBlocksHtml += `Block ${i + response.min + 1}, previous_hash: ${nextBlockPreviousHash}<br>`;
 
       //print if hashes match
       if (calculatedHash === nextBlockPreviousHash) {
-        checkedBlocksHtml += `<span style="color:green">Bloco ${i + response.min} OK</span><br><br>`;
+        checkedBlocksHtml += `<span style="color:green">Block ${i + response.min} OK</span><br><br>`;
       } else {
-        checkedBlocksHtml += `<span style="color:red ">Bloco ${i + response.min} não confere</span><br><br>`;
+        checkedBlocksHtml += `<span style="color:red ">Block ${i + response.min} not ok!</span><br><br>`;
         blocksMatch = false;
       }
       blockchainChecking.innerHTML = checkedBlocksHtml;
@@ -173,8 +173,8 @@ window.checkBlockchain = async function () {
 
     //print final result
     blocksMatch
-      ? (blockchainChecking.innerHTML = `<span style="color:green">Hashs dos blocos batem com os enviados pela Carbon</span><br><br>` + blockchainChecking.innerHTML)
-      : (blockchainChecking.innerHTML = `<span style="color:red ">Hashs dos blocos NÃO batem com os enviados pela Carbon</span><br><br>` + blockchainChecking.innerHTML);
+      ? (blockchainChecking.innerHTML = `<span style="color:green">The block hashes match those sent by the blockchain network</span><br><br>` + blockchainChecking.innerHTML)
+      : (blockchainChecking.innerHTML = `<span style="color:red ">The block hashes do not match those sent by the blockchain network</span><br><br>` + blockchainChecking.innerHTML);
 
     //requisition success message
     document.getElementById("flash").innerHTML = successFlashMessage;

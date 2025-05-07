@@ -6,7 +6,8 @@ const ipfsController = require("../controllers/ipfs-controller.js");
 const router = Router();
 
 //// UNAUTHENTICATED ROUTES ////
-router.get("/getLatestIPFSBlock", ipfsController.getLatestIPFSBlock);
+router.post("/postTransparencyLog", ipfsController.postTransparencyLog);
+// router.get("/getLatestIPFSBlock", ipfsController.getLatestIPFSBlock);
 
 
 module.exports = router;

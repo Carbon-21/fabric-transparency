@@ -5,7 +5,8 @@
   <%- include("partials/head") %>
   <script src="/scripts/transparency-bundle.js"></script>
 
-  <body id="top" onload="getWorldState();getBlockchainTail();getLatestIPFSBlock();">
+  <!-- <body id="top" onload="getWorldState();getBlockchainTail();getLatestIPFSBlock();"> -->
+  <body id="top" onload="getWorldState();getBlockchainTail()">
 
     <section id="intro"><%- include("partials/navbar") %></section>
 
@@ -25,7 +26,7 @@
             <!-- Content -->
             <div id="collapseOne" class="accordion-collapse collapse" aria-labelledby="headingOne" data-bs-parent="#accordionExample">
               <div class="accordion-body">
-                <spam class="description">A partir do World State é possível reconstruir o saldo de cada carteira</spam>
+                <spam class="description">Using the World State, it is possible to reconstruct the balance of each wallet on another network</spam>
                 <div class="mt-3">
                   <div id="ws"></div>
                 </div>
@@ -38,22 +39,22 @@
             <!-- Title -->
             <h2 class="accordion-header" id="headingTwo">
               <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
-                Cauda da ledger
+                Blockchain tail
               </button>
             </h2>
 
             <!-- Content -->
             <div id="collapseTwo" class="accordion-collapse collapse" aria-labelledby="headingTwo" data-bs-parent="#accordionExample">
               <div class="accordion-body">
-                <spam class="description">O último bloco da blockchain no presente momento</spam>
+                <spam class="description">This is currently the last block. You can send it to the IPFS.</spam>
                 <div class="mt-3">
-                  <span><strong>Número do bloco: </strong> </span>
+                  <span><strong>Block number: </strong> </span>
                   <span id="tailBlockNumber"></span><br />
-                  <span><strong>Data: </strong> </span>
+                  <span><strong>Date: </strong> </span>
                   <span id="tailTimestamp"></span><br />
-                  <span><strong>Hash do bloco: </strong> </span>
+                  <span><strong>Block hash: </strong> </span>
                   <span id="tailHash"></span><br />
-                  <span><strong>Bloco anterior: </strong> </span>
+                  <span><strong>Previous block: </strong> </span>
                   <span id="tailPreviousHash"></span><br />
                   <details>
                     <summary><strong>JSON</strong></summary>
@@ -67,30 +68,17 @@
           <!-- Accordion's collapsable 3 -->
           <div class="accordion-item">
             <!-- Title -->
-            <h2 class="accordion-header" id="headingThree">
+            <h2 class="accordion-header" id="headingFour">
               <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
-                Último bloco no IPFS
+                IPFS
               </button>
             </h2>
 
             <!-- Content -->
-            <div id="collapseThree" class="accordion-collapse collapse" aria-labelledby="headingThree" data-bs-parent="#accordionExample">
+            <div id="collapseThree" class="accordion-collapse collapse" aria-labelledby="headingFour" data-bs-parent="#accordionExample">
               <div class="accordion-body">
-                <spam class="description">A cada uma hora, a cauda da ledger é inserida no IPFS</spam>
-                <div class="mt-3">
-                  <span><strong>Número do bloco: </strong> </span>
-                  <span id="ipfsBlockNumber"></span><br />
-                  <span><strong>Data: </strong> </span>
-                  <span id="ipfsTimestamp"></span><br />
-                  <span><strong>Hash do bloco: </strong> </span>
-                  <span id="ipfsHash"></span><br />
-                  <span><strong>Bloco anterior: </strong> </span>
-                  <span id="ipfsPreviousHash"></span><br />
-                  <details>
-                    <summary><strong>JSON</strong></summary>
-                    <pre><code class="content" id="ipfsJson"></code></pre>
-                  </details>
-                </div>
+                <spam class="description">Ideally the content is published on IPFS periodically. To make this proof of concept more intuitive, click the button below to do so.</spam>
+                
               </div>
             </div>
           </div>
@@ -98,24 +86,60 @@
           <!-- Accordion's collapsable 4 -->
           <div class="accordion-item">
             <!-- Title -->
-            <h2 class="accordion-header" id="headingFour">
-              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFour" aria-expanded="false" aria-controls="collapseFour">
-                Verificação da hashchain
+            <h2 class="accordion-header" id="headingThree">
+              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSix" aria-expanded="false" aria-controls="collapseSix">
+                Digital certificate
               </button>
             </h2>
 
             <!-- Content -->
-            <div id="collapseFour" class="accordion-collapse collapse" aria-labelledby="headingFour" data-bs-parent="#accordionExample">
+            <div id="collapseSix" class="accordion-collapse collapse" aria-labelledby="headingThree" data-bs-parent="#accordionExample">
+              <div class="accordion-body">
+                <spam class="description">The digital certificate below contains the public key that corresponds to the IPNS address. It proves that we are the ones making the IPFS publications, since doing so requires the corresponding private key.</spam>
+                
+              </div>
+            </div>
+          </div>
+
+          <!-- Accordion's collapsable 5 -->
+          <div class="accordion-item">
+            <!-- Title -->
+            <h2 class="accordion-header" id="headingFive">
+              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFive" aria-expanded="false" aria-controls="collapseFive">
+                Smart contract verification
+              </button>
+            </h2>
+
+            <!-- Content -->
+            <div id="collapseFive" class="accordion-collapse collapse" aria-labelledby="headingFive" data-bs-parent="#accordionExample">
+              <div class="accordion-body">
+                <spam class="description">Our smart contract is open source and available at: https://github.com/Carbon-21/fabric-transparency/blob/main/chaincode/chaincode/contract.go. You may download it at verify if its hash corresponds to the one alleged on the blockchain.</spam>
+                
+              </div>
+            </div>
+          </div>
+
+          <!-- Accordion's collapsable 6 -->
+          <div class="accordion-item">
+            <!-- Title -->
+            <h2 class="accordion-header" id="headingSix">
+              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFour" aria-expanded="false" aria-controls="collapseFour">
+                Hash chain verification
+              </button>
+            </h2>
+
+            <!-- Content -->
+            <div id="collapseFour" class="accordion-collapse collapse" aria-labelledby="headingSix" data-bs-parent="#accordionExample">
               <div class="accordion-body">
                 <spam class="description"
-                  >Requisite à Carbon determinada sequência de blocos, cada um contendo o hash do bloco anterior. Seu computador caculará então os hashs dos blocos recebidos e verificará se eles
-                  conferem com os hashs enviados pela Carbon.<br /><br />Insira números ou as palavras-chave "início" e "fim".
+                  >Request from the network a specific sequence of blocks, each containing the hash of the previous block. Your computer will then calculate the hashes of the received blocks and verify whether they match the hashes sent by the blockchain network.
+                  <br /><br />Enter numbers or the keywords 'beginning' and 'end'.
                 </spam>
 
                 <div class="input-group mt-3 mb-3">
-                  <input id="min" type="text" class="form-control mr-3 w-25" placeholder="Primeiro bloco" />
-                  <input id="max" type="text" class="form-control mx-3 w-25" placeholder="Último bloco" />
-                  <button class="btn btn-primary w-25" style="background-color: #1fac1f; border-color: #d1e7dd" type="button" onclick="checkBlockchain()">Solicitar</button>
+                  <input id="min" type="text" class="form-control mr-3 w-25" placeholder="First block" />
+                  <input id="max" type="text" class="form-control mx-3 w-25" placeholder="Last block" />
+                  <button class="btn btn-primary w-25" style="background-color: #1fac1f; border-color: #d1e7dd" type="button" onclick="checkBlockchain()">Request</button>
                 </div>
 
                 <div class="mt-4">
