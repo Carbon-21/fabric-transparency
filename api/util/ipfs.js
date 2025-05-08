@@ -3,9 +3,8 @@ const fs = require("fs");
 const path = require("path");
 const crypto = require("crypto");
 
-let helia;
 
-async function createNode() {
+async function createNode () {
   const { noise } = await import("@chainsafe/libp2p-noise");
   const { yamux } = await import("@chainsafe/libp2p-yamux");
   const { bootstrap } = await import("@libp2p/bootstrap");
@@ -14,56 +13,61 @@ async function createNode() {
   const { MemoryDatastore } = await import("datastore-core");
   const { createHelia } = await import("helia");
   const { createLibp2p } = await import("libp2p");
-  const { identifyService } = await import("libp2p/identify");
-
+  const { identify } = await import("@libp2p/identify");
+  
   // the blockstore is where we store the blocks that make up files
-  const blockstore = new MemoryBlockstore();
+  const blockstore = new MemoryBlockstore()
 
   // application-specific data lives in the datastore
-  const datastore = new MemoryDatastore();
+  const datastore = new MemoryDatastore()
 
   // libp2p is the networking layer that underpins Helia
   const libp2p = await createLibp2p({
     datastore,
     addresses: {
-      // listen: ["/ip4/127.0.0.1/tcp/0"], so localhost
-      listen: ["/ip4/0.0.0.0/tcp/4001"],
+      listen: [
+        '/ip4/127.0.0.1/tcp/0'
+      ]
     },
-    transports: [tcp()],
-    connectionEncryption: [noise()],
-    streamMuxers: [yamux()],
+    transports: [
+      tcp()
+    ],
+    connectionEncrypters: [
+      noise()
+    ],
+    streamMuxers: [
+      yamux()
+    ],
     peerDiscovery: [
       bootstrap({
         list: [
-          "/dnsaddr/bootstrap.libp2p.io/p2p/QmNnooDu7bfjPFoTZYxMNLWUQJyrVwtbZg5gBMjTezGAJN",
-          "/dnsaddr/bootstrap.libp2p.io/p2p/QmQCU2EcMqAqQPR2i9bChDtGNJchTbq5TbXJJ16u19uLTa",
-          "/dnsaddr/bootstrap.libp2p.io/p2p/QmbLHAnMoJPWSCR5Zhtx6BHJX9KiKNN6tpvbUcqanj75Nb",
-          "/dnsaddr/bootstrap.libp2p.io/p2p/QmcZf59bWwK5XFi76CZX8cbJ4BhTzzA3gU1ZjYZcYW3dwt",
-        ],
-      }),
+          '/dnsaddr/bootstrap.libp2p.io/p2p/QmNnooDu7bfjPFoTZYxMNLWUQJyrVwtbZg5gBMjTezGAJN',
+          '/dnsaddr/bootstrap.libp2p.io/p2p/QmQCU2EcMqAqQPR2i9bChDtGNJchTbq5TbXJJ16u19uLTa',
+          '/dnsaddr/bootstrap.libp2p.io/p2p/QmbLHAnMoJPWSCR5Zhtx6BHJX9KiKNN6tpvbUcqanj75Nb',
+          '/dnsaddr/bootstrap.libp2p.io/p2p/QmcZf59bWwK5XFi76CZX8cbJ4BhTzzA3gU1ZjYZcYW3dwt'
+        ]
+      })
     ],
     services: {
-      identify: identifyService(),
-    },
-  });
+      identify: identify()
+    }
+  })
 
-  helia = await createHelia({
+  return await createHelia({
     datastore,
     blockstore,
-    libp2p,
-  });
-
-  console.log("Peer ID: ", helia.libp2p.peerId);
-  console.log("getPeers: ", helia.libp2p.getPeers());
-  console.log("Multiaddrs:", helia.libp2p.getMultiaddrs());
+    libp2p
+  })
 }
 
 exports.writeIPFS = async (tail, ws) => {
   try {
     const { unixfs } = await import("@helia/unixfs");
     const { ipns } = await import("@helia/ipns");
+    const { generateKeyPair } = await import ('@libp2p/crypto/keys')
 
     //sign tail+ws
+    const privateKey = await generateKeyPair('Ed25519')
     const ipfsPrivateKey = fs.readFileSync(path.join(__dirname, "../keys/ipfs-key.pem"));
     const tailWsSigned = signContent(tail, ws, ipfsPrivateKey);
 
@@ -75,18 +79,19 @@ exports.writeIPFS = async (tail, ws) => {
 
     //////IPFS//////
     //initialize IPFS node if it didn't happen already
-    if (!helia) await createNode();
+    const helia = await createNode();
 
     //create a filesystem on top of Helia, in this case it's UnixFS
     const ipfsFs = unixfs(helia);
 
-    //deriver peer id from peer private key
-    const keyInfo = await helia.libp2p.keychain.importKey("carbono21", ipfsPrivateKey, process.env.IPFS_SECRET_KEY);
-    const peerId = await helia.libp2p.keychain.exportPeerId(keyInfo.name);
 
-    const ipnsConfig = ipns(helia, [
-      // configure routings here
-    ]);
+    // OLD IPNS
+    //deriver peer id from peer private key
+    // const keyInfo = await helia.libp2p.keychain.importKey("my-key", ipfsPrivateKey, process.env.IPFS_SECRET_KEY);
+    // const peerId = await helia.libp2p.keychain.exportPeerId(keyInfo.name);
+    // const ipnsConfig = ipns(helia, [
+    //   // configure routings here
+    // ]);
 
     // TODO create root or fetch existing one
     // getRootCid(peerId);
@@ -120,8 +125,19 @@ exports.writeIPFS = async (tail, ws) => {
     rootDirCid = await cp(ipfsFs, rootDirCid, signatureCid, fileName);
     logger.debug(`Added ${fileName} to root dir. Updated directory cid:`, rootDirCid.toString());
 
-    //publish root dir with files to IPNS
-    await ipnsPublish(rootDirCid, peerId, ipnsConfig);
+    /////// IPNS //////
+    const name = ipns(helia)
+
+    // publish the name
+    await name.publish(privateKey, rootDirCid)
+
+    // test: resolve the name
+    const result = await name.resolve(privateKey.publicKey)
+    logger.info(result.cid, result.path)
+
+    //OLD
+    // //publish root dir with files to IPNS
+    // await ipnsPublish(rootDirCid, peerId, ipnsConfig);
 
     return rootDirCid;
   } catch (error) {
@@ -129,6 +145,38 @@ exports.writeIPFS = async (tail, ws) => {
   }
 };
 
+const cp = async (fs, dirCid, fileCid, fileName) => {
+  const updatedDirCid = await fs.cp(fileCid, dirCid, fileName);
+
+  return updatedDirCid;
+};
+
+//concat transparent log content (bc tail + ws). Then, sing and return it
+const signContent = (tail, ws, ipfsPrivateKey) => {
+  //concat
+  const tailWs = tail.concat("", ws);
+
+  //get RSA private key
+  const privateKey = crypto.createPrivateKey({
+    key: ipfsPrivateKey,
+    format: "pem",
+    type: "pkcs8",
+    // 'cipher': 'rsa',
+    passphrase: process.env.IPFS_SECRET_KEY,
+  });
+
+  //sign
+  let signer = crypto.createSign("RSA-SHA256");
+  signer.write(tailWs);
+  signer.end();
+  const signature = signer.sign(privateKey, "base64");
+
+  // verifySignature(signature, tailWs);
+
+  return signature;
+};
+
+//////// UNUSED (but useful) ///////
 const ipnsPublish = async (cid, peerId, ipnsConfig) => {
   try {
     //update IPNS with new cid
@@ -169,31 +217,21 @@ const getRootCid = async (ipnsConfig, peerId) => {
   //...
 };
 
-//// Signature Functions ////
-//concat transparent log content (bc tail + ws). Then, sing and return it
-const signContent = (tail, ws, ipfsPrivateKey) => {
-  //concat
-  const tailWs = tail.concat("", ws);
+const cat = async (fs, fileCid) => {
+  const decoder = new TextDecoder();
 
-  //get RSA private key
-  const privateKey = crypto.createPrivateKey({
-    key: ipfsPrivateKey,
-    format: "pem",
-    type: "pkcs8",
-    // 'cipher': 'rsa',
-    passphrase: process.env.IPFS_SECRET_KEY,
-  });
-
-  //sign
-  let signer = crypto.createSign("RSA-SHA256");
-  signer.write(tailWs);
-  signer.end();
-  const signature = signer.sign(privateKey, "base64");
-
-  // verifySignature(signature, tailWs);
-
-  return signature;
+  for await (const buf of fs.cat(fileCid)) {
+    logger.info(decoder.decode(buf));
+  }
 };
+
+//cat everything from a dir
+const recursiveCat = async (fs, dirCid) => {
+  for await (const entry of fs.ls(dirCid)) {
+    cat(fs, entry.cid);
+  }
+};
+
 
 //test function. verify signature using the signers' certificate
 const verifySignature = async (signature, content) => {
@@ -239,26 +277,7 @@ const mkdir = async (fs, dirName, pathCid) => {
   return emptyDirCid;
 };
 
-const cat = async (fs, fileCid) => {
-  const decoder = new TextDecoder();
 
-  for await (const buf of fs.cat(fileCid)) {
-    logger.info(decoder.decode(buf));
-  }
-};
-
-//cat everything from a dir
-const recursiveCat = async (fs, dirCid) => {
-  for await (const entry of fs.ls(dirCid)) {
-    cat(fs, entry.cid);
-  }
-};
-
-const cp = async (fs, dirCid, fileCid, fileName) => {
-  const updatedDirCid = await fs.cp(fileCid, dirCid, fileName);
-
-  return updatedDirCid;
-};
 
 ///////////HELIA: alternativas pro writeIPFS (experimentos com diretórios falharam)///////////////
 

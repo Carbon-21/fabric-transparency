@@ -22,7 +22,7 @@ exports.postTransparencyLog = async () => {
 
     //write tail, ws and signature(tails+ws) on ipfs
     const cid = await ipfs.writeIPFS(tail, ws);
-    cid ? logger.info("Crontrab done! Transparency log posted to IPFS") : logger.error("IPFS publication failed! Transparency log not posted to IPFS");
+    cid ? logger.info("Transparency log posted to IPFS") : logger.error("IPFS publication failed! Transparency log not posted to IPFS");
   } catch (error) {
     return new HttpError(500, error);
   }

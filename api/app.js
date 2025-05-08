@@ -106,8 +106,8 @@ createAdmin()
 
 //// IPFS publication ////
 // var cronJob = require("cron").CronJob;
-const { postTransparencyLog } = require("./controllers/ipfs-controller");
-postTransparencyLog();
+// const { postTransparencyLog } = require("./controllers/ipfs-controller");
+// postTransparencyLog();
 //transparency log: regularly post blockchain's tail to the IPFS
   // new cronJob(process.env.LOG_CRONTAB, postTransparencyLog, null, true);
 
