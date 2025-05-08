@@ -101,7 +101,7 @@ createAdmin()
     // postTransparencyLog();
   })
   .catch((err) => {
-    logger.fatal("Server couldn't be initialized:", err);
+    logger.fatal("Server couldn't be initialized: ", err);
   });
 
 //// IPFS publication ////
