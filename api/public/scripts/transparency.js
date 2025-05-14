@@ -185,6 +185,48 @@ window.checkBlockchain = async function () {
   }
 };
 
+window.calculateFileHash = async function () {
+  const fileInput = document.getElementById('contractFile');
+  const hashResult = document.getElementById('hashResult');
+
+  if (!fileInput.files || fileInput.files.length === 0) {
+    hashResult.innerHTML = '<div class="alert alert-warning">Please select a file first</div>';
+    return;
+  }
+
+  try {
+    // Display loading indicator
+    hashResult.innerHTML = '<div class="d-flex align-items-center"><strong>Calculating hash...</strong><div class="spinner-border ms-auto" role="status" aria-hidden="true"></div></div>';
+
+    const file = fileInput.files[0];
+    const arrayBuffer = await file.arrayBuffer();
+    const hashBuffer = await crypto.subtle.digest('SHA-256', arrayBuffer);
+
+    // Convert hash to hex string
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+
+    // Convert hash to base64 (like in the example code)
+    const hashBase64 = btoa(String.fromCharCode(...new Uint8Array(hashBuffer)));
+
+    // Display results
+    hashResult.innerHTML = `
+              <div class="alert alert-success">
+                <strong>File: </strong>${file.name}<br>
+                <strong>Size: </strong>${(file.size / 1024).toFixed(2)} KB<br>
+                <strong>SHA-256 Hash (hex): </strong><span class="limit">${hashHex}</span><br>
+                <strong>SHA-256 Hash (base64): </strong><span class="limit">${hashBase64}</span>
+              </div>`;
+
+    document.getElementById("flash").innerHTML = successFlashMessage;
+  } catch (error) {
+    console.error('Error calculating hash:', error);
+    hashResult.innerHTML = `<div class="alert alert-danger">Error calculating hash: ${error.message}</div>`;
+    document.getElementById("flash").innerHTML = failureFlashMessage;
+  }
+};
+
+
 ///// AUX /////
 function convertTZ(date, tzString) {
   return new Date((typeof date === "string" ? new Date(date) : date).toLocaleString("en-US", { timeZone: tzString }));

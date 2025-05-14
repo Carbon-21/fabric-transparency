@@ -105,19 +105,29 @@
           <div class="accordion-item">
             <!-- Title -->
             <h2 class="accordion-header" id="headingFive">
-              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFive" aria-expanded="false" aria-controls="collapseFive">
+              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFive"
+                aria-expanded="false" aria-controls="collapseFive">
                 Smart contract verification
               </button>
             </h2>
-
             <!-- Content -->
-            <div id="collapseFive" class="accordion-collapse collapse" aria-labelledby="headingFive" data-bs-parent="#accordionExample">
+            <div id="collapseFive" class="accordion-collapse collapse" aria-labelledby="headingFive"
+              data-bs-parent="#accordionExample">
               <div class="accordion-body">
-                <spam class="description">Our smart contract is open source and available at: https://github.com/Carbon-21/fabric-transparency/blob/main/chaincode/chaincode/contract.go. You may download it at verify if its hash corresponds to the one alleged on the blockchain.</spam>
-                
+                <spam class="description">Our smart contract is open source and available at:
+                  https://github.com/Carbon-21/fabric-transparency/blob/main/chaincode/chaincode/contract.go. You may download it
+                  and verify if its hash corresponds to the one alleged on the blockchain.</spam>
+          
+                <div class="mt-3">
+                  <div class="input-group mb-3">
+                    <input type="file" class="form-control" id="contractFile" aria-describedby="fileHelp">
+                    <button class="btn btn-primary" style="background-color: #1fac1f; border-color: #d1e7dd" type="button"
+                      id="calculateHashBtn" onclick="calculateFileHash()">Calculate Hash</button>
+                  </div>
+                  <div id="hashResult" class="mt-3"></div>
+                </div>
               </div>
             </div>
-          </div>
 
           <!-- Accordion's collapsable 6 -->
           <div class="accordion-item">
