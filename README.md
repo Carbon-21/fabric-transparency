@@ -5,8 +5,8 @@
 Para clonar o repositório:
 
 ```sh
-git clone --single-branch -b develop https://github.com/Carbon-21/4orgs-ERC1155.git
-cd 4orgs-ERC1155
+git clone https://github.com/Carbon-21/fabric-transparency/tree/main
+cd fabric-transparency
 ```
 
 Para instalar as dependências do Hyperledger Fabric:
