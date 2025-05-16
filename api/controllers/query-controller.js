@@ -170,6 +170,75 @@ exports.getBlockchainTailLocal = async (chaincodeName, channelName) => {
   }
 };
 
+//get blocks where chaincodes were deployed
+exports.getBlocksWithChaincodeDeployment = async (req, res, next) => {
+  const chaincodeName = req.params.chaincode;
+  const channelName = req.params.channel;
+
+
+  // //connect to the channel and get the
+  const [chaincode, gateway] = await helper.getChaincode("Org1", channelName, chaincodeName, "admin", next);
+
+  try {
+    //use QSCC
+    const network = await gateway.getNetwork(channelName);
+    const contract = network.getContract("qscc");
+
+    //get tail's number
+    let info = await contract.evaluateTransaction("GetChainInfo", channelName);
+    info = fabproto6.common.BlockchainInfo.decode(info);
+    const tailNumber = info.height.low - 1;
+
+    //get blocks and put them in array if they contain "chaincode:", which indicates a chaincode deploy
+    let blocks = [];
+    let indexes = [];
+    let hashes = [];
+    for (let i = 2; i <= tailNumber; i++) {
+      //get block
+      let block = await contract.evaluateTransaction("GetBlockByNumber", channelName, String(i));
+
+      //decode block
+      block = BlockDecoder.decode(block);
+      decodeBlockBuffers(block);
+
+      //check for deployment
+      var obj1_str = JSON.stringify(block);
+      const regex = /chaincode:([a-zA-Z0-9]+)/g;
+
+      // Extract all hash values using match() and regex
+      let matches = [];
+      let match;
+      while ((match = regex.exec(obj1_str)) !== null) {
+          // match[1] contains the hash value (the part after "chaincode:")
+          matches.push(match[1]);
+      }
+
+      // if there is a deployment
+      if (matches.length > 0)
+      {
+        logger.info("Chaincode deployment detected in block: ",i); 
+
+        //append
+        blocks.push(block);
+        indexes.push(i)
+        hashes.push(matches)
+      }
+    }
+
+    //close communication channel
+    await gateway.disconnect();
+
+    //send OK response
+    return res.json({
+      indexes,
+      blocks,
+      hashes
+    });
+  } catch (err) {
+    return next(new HttpError(500, err));
+  }
+};
+
 exports.getRangeOfBlocks = async (req, res, next) => {
   const chaincodeName = req.params.chaincode;
   const channelName = req.params.channel;

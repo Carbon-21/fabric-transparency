@@ -185,6 +185,95 @@ window.checkBlockchain = async function () {
   }
 };
 
+window.calculateFileHash = async function () {
+  const fileInput = document.getElementById('contractFile');
+  const hashResult = document.getElementById('hashResult');
+
+  if (!fileInput.files || fileInput.files.length === 0) {
+    hashResult.innerHTML = '<div class="alert alert-warning">Please select a file first</div>';
+    return;
+  }
+
+  try {
+    ///// GET BLOCKS WITH CHAINCODE DEPLOYMENT ////
+    //make request to the backend
+    let url = `http://localhost:4000/query/channels/channel1/chaincodes/chaincode/getBlocksWithChaincodeDeployment`;
+    var init = {
+      method: "GET",
+    };
+    let response = await fetch(url, init);
+
+    if (response.ok) {
+      response = await response.json();
+      console.log(response)
+  
+    } 
+    else {
+      document.getElementById("flash").innerHTML = failureFlashMessage;
+      console.log("HTTP Error ", response.status);
+      console.log(response);
+    }
+
+    ////// HASH FILE ///////
+    // Display loading indicator
+    hashResult.innerHTML = '<div class="d-flex align-items-center"><strong>Calculating hash...</strong><div class="spinner-border ms-auto" role="status" aria-hidden="true"></div></div>';
+    let matchMessage = `The file hash does NOT match any smart contract deployment hash in the blockchain!`
+    let deploymentsMessage = ""
+
+    const file = fileInput.files[0];
+    const arrayBuffer = await file.arrayBuffer();
+    const hashBuffer = await crypto.subtle.digest('SHA-256', arrayBuffer);
+
+    // Convert hash to hex string
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    const fileHash = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+
+    // Go through all chaincode deployments in the blockchain
+    for (let i = 0; i < response.hashes.length; i++) {
+
+      // Show block info and content
+      deploymentsMessage += `
+          <br><strong>Block: </strong>${response.indexes[i]}<br>
+          <strong>Hash value(s) of the chaincode(s) deployed in the block: </strong>${response.hashes[i]}<br>
+          <details>
+              <summary><strong>JSON</strong></summary>
+              <pre><code class="content" id="tailJson">${JSON.stringify(response.blocks[i], null, 4)}</code></pre>
+          </details>
+          `
+
+      // A block may contain more than one chaincode deployment
+      for (let j = 0; j < response.hashes[i].length; j++) {
+
+        // Check if the file hash matches a deployment hash in the blockchain
+        if (String(response.hashes[i][j]) == String(fileHash)) {
+          matchMessage = `The file hash matches a smart contract deployment hash in block ${response.indexes[i]}!`;
+        } 
+      }
+    }
+
+    // Display results
+    hashResult.innerHTML = `
+              <div class="alert">
+                <strong>${matchMessage}</strong><br><br>
+                <strong>File: </strong>${file.name}<br>
+                <strong>Size: </strong>${(file.size / 1024).toFixed(2)} KB<br>
+                <strong>SHA-256 Hash (hex): </strong><span class="limit">${fileHash}</span><br><br>
+                
+                ${(response.indexes.length)} smart contract deployment(s) detected in the blockchain:
+
+                ${deploymentsMessage}
+
+              </div>`;
+
+    document.getElementById("flash").innerHTML = successFlashMessage;
+  } catch (error) {
+    console.error('Error calculating hash:', error);
+    hashResult.innerHTML = `<div class="alert alert-danger">Error calculating hash: ${error.message}</div>`;
+    document.getElementById("flash").innerHTML = failureFlashMessage;
+  }
+};
+
+
 ///// AUX /////
 function convertTZ(date, tzString) {
   return new Date((typeof date === "string" ? new Date(date) : date).toLocaleString("en-US", { timeZone: tzString }));
