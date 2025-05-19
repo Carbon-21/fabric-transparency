@@ -23,9 +23,11 @@ The easiest way to use this tool is through a virtual machine:
 
 1. Download VirtualBox
 2. Download the [Debian image](https://drive.google.com/file/d/1OcgcZKUsSEIYW5KWos6XiynpSzP4EttJ/view?usp=sharing) containing the tool
-3. Click on the vbox file. This should load the machine on VirtualBox
-4. Adjust the machine resources under "settings" -> "general" -> "system". We recommend at leat 4Gb and 2vCPUs, or half of the available resources, ideally
+3. Unzip the files
+4. Click on the vbox file. This should load the machine on VirtualBox
+5. Adjust the machine resources under "settings" -> "general" -> "system". We recommend at leat 4Gb and 2vCPUs, or half of the available resources, ideally
 
+**Important**: the **password** to use the VM is **1234**
 ### Source code
 
 If you do not want to use a VM, first dowload the dependencies aforementioned. Then download the tool:
