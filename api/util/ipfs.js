@@ -93,6 +93,10 @@ exports.writeIPFS = async (tail, ws,helia) => {
     timestamp = Date.now().toString();
 
     //////IPFS//////
+    //initialize IPFS node if it didn't happen already
+    //TODO
+    //Verify if the node is not instanciated more then once
+    const helia = await createNode();
 
     //create a filesystem on top of Helia, in this case it's UnixFS
     const ipfsFs = unixfs(helia);
@@ -138,6 +142,9 @@ exports.writeIPFS = async (tail, ws,helia) => {
     rootDirCid = await cp(ipfsFs, rootDirCid, signatureCid, fileName);
     logger.debug(`Added ${fileName} to root dir. Updated directory cid:`, rootDirCid.toString());
 
+    //TODO
+    //Add a forth element that is the CID of the previous
+    
     /////// IPNS //////
 
     // publish the name

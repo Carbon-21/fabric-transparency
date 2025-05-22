@@ -297,3 +297,45 @@ var calculateBlockHash = function (header) {
 
   return Buffer.from(hash, "hex").toString("base64");
 };
+
+
+window.postTransparencyLog = async function () {
+  const ipfsPublicationStatusDiv = document.getElementById("ipfsPublicationStatus");
+  ipfsPublicationStatusDiv.innerHTML = ''; 
+
+  // Display a loading indicator
+  ipfsPublicationStatusDiv.innerHTML = `
+    <div class="d-flex align-items-center">
+      <strong>Publishing to IPFS...</strong>
+      <div class="spinner-border ms-auto" role="status" aria-hidden="true"></div>
+    </div>`;
+
+  const url = `http://localhost:4000/ipfs/postTransparencyLog`;
+  const init = {
+    method: "POST",
+  };
+
+  try {
+    const response = await fetch(url, init);
+    const responseData = await response.json();
+
+    if (response.ok) {
+      document.getElementById("flash").innerHTML = successFlashMessage;
+      // Update the display to show the CID
+      ipfsPublicationStatusDiv.innerHTML = `
+        <div class="alert alert-success mt-3">
+          Transparency log successfully published to IPFS/IPNS! <br>
+          <strong>Published CID:</strong> <span class="limit">${responseData.cid}</span>
+        </div>`;
+    } else {
+      
+      document.getElementById("flash").innerHTML = failureFlashMessage;
+      ipfsPublicationStatusDiv.innerHTML = `<div class="alert alert-danger mt-3">Failed to publish to IPFS: ${responseData.message || 'Unknown error'}</div>`;
+      console.error("HTTP Error:", response.status, responseData);
+    }
+  } catch (error) {
+    document.getElementById("flash").innerHTML = failureFlashMessage;
+    ipfsPublicationStatusDiv.innerHTML = `<div class="alert alert-danger mt-3">Network error or IPFS node issue: ${error.message}</div>`;
+    console.error("Fetch error:", error);
+  }
+};
