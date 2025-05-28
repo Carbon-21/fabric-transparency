@@ -3,8 +3,8 @@ const fs = require("fs");
 const path = require("path");
 const crypto = require("crypto");
 
-
-async function createNode () {
+exports.createNode = async () => {
+// async function createNode () {
   const { noise } = await import("@chainsafe/libp2p-noise");
   const { yamux } = await import("@chainsafe/libp2p-yamux");
   const { bootstrap } = await import("@libp2p/bootstrap");
@@ -60,16 +60,31 @@ async function createNode () {
   })
 }
 
-exports.writeIPFS = async (tail, ws) => {
+exports.writeIPFS = async (tail, ws,helia) => {
   try {
     const { unixfs } = await import("@helia/unixfs");
     const { ipns } = await import("@helia/ipns");
-    const { generateKeyPair } = await import ('@libp2p/crypto/keys')
+    const {generateKeyPairFromSeed } = await import ('@libp2p/crypto/keys')
 
-    //sign tail+ws
-    const privateKey = await generateKeyPair('Ed25519')
-    const ipfsPrivateKey = fs.readFileSync(path.join(__dirname, "../keys/ipfs-key.pem"));
-    const tailWsSigned = signContent(tail, ws, ipfsPrivateKey);
+    //generate IPNS key pair from a fixed seed
+    const seed = new Uint8Array([
+      1, 2, 3, 4, 5, 6, 7, 8,
+      9, 10, 11, 12, 13, 14, 15, 16,
+      17, 18, 19, 20, 21, 22, 23, 24,
+      25, 26, 27, 28, 29, 30, 31, 32
+    ]);
+    const ipnsKeyPair = await generateKeyPairFromSeed('Ed25519',seed)
+
+    //initialize IPFS node and create IPNS object
+    // const helia = await createNode();
+    const ipnsName = ipns(helia)
+
+    //get cid from current IPNS reference, if any
+    // const resulta = await ipnsName.resolve(ipnsKeyPair.publicKey)
+    // logger.info("OLHA O IPNS",resulta.cid, resulta.path)
+
+    //sign tail+ws+previous_cid
+    const tailWsSigned = signContent(tail, ws,"");
 
     //we will use this TextEncoder to turn strings into Uint8Arrays
     const encoder = new TextEncoder();
@@ -78,8 +93,6 @@ exports.writeIPFS = async (tail, ws) => {
     timestamp = Date.now().toString();
 
     //////IPFS//////
-    //initialize IPFS node if it didn't happen already
-    const helia = await createNode();
 
     //create a filesystem on top of Helia, in this case it's UnixFS
     const ipfsFs = unixfs(helia);
@@ -126,18 +139,14 @@ exports.writeIPFS = async (tail, ws) => {
     logger.debug(`Added ${fileName} to root dir. Updated directory cid:`, rootDirCid.toString());
 
     /////// IPNS //////
-    const name = ipns(helia)
 
     // publish the name
-    await name.publish(privateKey, rootDirCid)
+    await ipnsName.publish(ipnsKeyPair, rootDirCid)
 
     // test: resolve the name
-    const result = await name.resolve(privateKey.publicKey)
+    const result = await ipnsName.resolve(ipnsKeyPair.publicKey)
     logger.info(result.cid, result.path)
 
-    //OLD
-    // //publish root dir with files to IPNS
-    // await ipnsPublish(rootDirCid, peerId, ipnsConfig);
 
     return rootDirCid;
   } catch (error) {
@@ -152,11 +161,13 @@ const cp = async (fs, dirCid, fileCid, fileName) => {
 };
 
 //concat transparent log content (bc tail + ws). Then, sing and return it
-const signContent = (tail, ws, ipfsPrivateKey) => {
+const signContent = (tail, ws, cid) => {
   //concat
-  const tailWs = tail.concat("", ws);
+  const concat = tail.concat(ws,cid);
+  // console.log(concat)
 
   //get RSA private key
+  const ipfsPrivateKey = fs.readFileSync(path.join(__dirname, "../keys/ipfs-key.pem"));
   const privateKey = crypto.createPrivateKey({
     key: ipfsPrivateKey,
     format: "pem",
@@ -165,9 +176,10 @@ const signContent = (tail, ws, ipfsPrivateKey) => {
     passphrase: process.env.IPFS_SECRET_KEY,
   });
 
+
   //sign
   let signer = crypto.createSign("RSA-SHA256");
-  signer.write(tailWs);
+  signer.write(concat);
   signer.end();
   const signature = signer.sign(privateKey, "base64");
 

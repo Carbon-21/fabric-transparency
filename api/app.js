@@ -2,7 +2,7 @@
 
 ///// REQUIRES /////
 //npm packages
-require("dotenv").config();
+require ("dotenv").config();
 const express = require("express");
 const session = require("express-session");
 const flash = require("connect-flash");
@@ -16,6 +16,7 @@ const logger = require("./util/logger");
 const cors = require("./middleware/cors");
 const error = require("./middleware/error");
 const { createAdmin } = require("./controllers/auth-crontroller");
+const { postTransparencyLog, createIpfsNode } = require("./controllers/ipfs-controller");
 
 //routes
 const authRoutes = require("./routes/auth-routes");
@@ -93,23 +94,26 @@ createAdmin()
     app.listen(port, host);
     logger.info("****************** SERVER STARTED ************************");
     logger.info("***************  http://%s:%s  ******************", host, port);
-    // const httpsServer = https.createServer(options, app);
-    // httpsServer.listen(port, host, () => {
-    //   logger.info("****************** HTTPS SERVER STARTED ************************");
-    //   logger.info("***************  https://%s:%s  *******************", host, port);
-    // });
-    // postTransparencyLog();
   })
   .catch((err) => {
     logger.fatal("Server couldn't be initialized: ", err);
   });
 
 //// IPFS publication ////
-// var cronJob = require("cron").CronJob;
-// const { postTransparencyLog } = require("./controllers/ipfs-controller");
-// postTransparencyLog();
+createIpfsNode().then((helia) => {
+  postTransparencyLog(helia);
+})
+.catch((err) => {
+  logger.fatal("IPFS couldn't be initialized: ", err);
+});
+
 //transparency log: regularly post blockchain's tail to the IPFS
-  // new cronJob(process.env.LOG_CRONTAB, postTransparencyLog, null, true);
+// var cronJob = require("cron").CronJob;
+// new cronJob(process.env.LOG_CRONTAB, postTransparencyLog, null, true);
+
+
+
+/// OLD
 
 ///// SERVER INIT /////
 // app.listen(port, host);
@@ -119,3 +123,59 @@ createAdmin()
 // ///// ERROR MIDDLEWARE /////
 // //executed if any other middleware yields an error
 // app.use(error);
+
+// async function createNode () {
+//   const { noise } = await import("@chainsafe/libp2p-noise");
+//   const { yamux } = await import("@chainsafe/libp2p-yamux");
+//   const { bootstrap } = await import("@libp2p/bootstrap");
+//   const { tcp } = await import("@libp2p/tcp");
+//   const { MemoryBlockstore } = await import("blockstore-core");
+//   const { MemoryDatastore } = await import("datastore-core");
+//   const { createHelia } = await import("helia");
+//   const { createLibp2p } = await import("libp2p");
+//   const { identify } = await import("@libp2p/identify");
+  
+//   // the blockstore is where we store the blocks that make up files
+//   const blockstore = new MemoryBlockstore()
+
+//   // application-specific data lives in the datastore
+//   const datastore = new MemoryDatastore()
+
+//   // libp2p is the networking layer that underpins Helia
+//   const libp2p = await createLibp2p({
+//     datastore,
+//     addresses: {
+//       listen: [
+//         '/ip4/127.0.0.1/tcp/0'
+//       ]
+//     },
+//     transports: [
+//       tcp()
+//     ],
+//     connectionEncrypters: [
+//       noise()
+//     ],
+//     streamMuxers: [
+//       yamux()
+//     ],
+//     peerDiscovery: [
+//       bootstrap({
+//         list: [
+//           '/dnsaddr/bootstrap.libp2p.io/p2p/QmNnooDu7bfjPFoTZYxMNLWUQJyrVwtbZg5gBMjTezGAJN',
+//           '/dnsaddr/bootstrap.libp2p.io/p2p/QmQCU2EcMqAqQPR2i9bChDtGNJchTbq5TbXJJ16u19uLTa',
+//           '/dnsaddr/bootstrap.libp2p.io/p2p/QmbLHAnMoJPWSCR5Zhtx6BHJX9KiKNN6tpvbUcqanj75Nb',
+//           '/dnsaddr/bootstrap.libp2p.io/p2p/QmcZf59bWwK5XFi76CZX8cbJ4BhTzzA3gU1ZjYZcYW3dwt'
+//         ]
+//       })
+//     ],
+//     services: {
+//       identify: identify()
+//     }
+//   })
+
+//   return await createHelia({
+//     datastore,
+//     blockstore,
+//     libp2p
+//   })
+// }

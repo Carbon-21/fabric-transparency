@@ -5,9 +5,19 @@ const ipfs = require("../util/ipfs");
 const { getBlockchainTailLocal, getWorldStateLocal } = require("./query-controller");
 // const { getURILocal } = require("./query-controller");
 
+exports.createIpfsNode = async () => {
+  try {
+    const helia = await ipfs.createNode();
+    return helia;
+
+  } catch (error) {
+    return new HttpError(500, error);
+  }
+}
+
 //post blockchain's tail to the IPFS
 //used by crontab
-exports.postTransparencyLog = async () => {
+exports.postTransparencyLog = async (helia) => {
   const chaincodeName = "chaincode";
   const channelName = "channel1";
   const org = "Org1";
@@ -21,7 +31,7 @@ exports.postTransparencyLog = async () => {
     const ws = await getWorldStateLocal(chaincodeName, channelName);
 
     //write tail, ws and signature(tails+ws) on ipfs
-    const cid = await ipfs.writeIPFS(tail, ws);
+    const cid = await ipfs.writeIPFS(tail, ws,helia);
     cid ? logger.info("Transparency log posted to IPFS") : logger.error("IPFS publication failed! Transparency log not posted to IPFS");
   } catch (error) {
     return new HttpError(500, error);
