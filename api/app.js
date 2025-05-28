@@ -25,24 +25,32 @@ const queryRoutes = require("./routes/query-routes");
 const frontRoutes = require("./routes/front-routes");
 const ipfsRoutes = require("./routes/ipfs-routes");
 
+///// HELIA SINGLETON /////
+let heliaInstance = null;
+let heliaInitialized = false;
 
-///// CONFIGS /////
-//express
+async function getHelia() {
+  if (heliaInitialized) return heliaInstance;
+
+  try {
+    heliaInstance = await createIpfsNode();
+    heliaInitialized = true;
+    return heliaInstance;
+  } catch (err) {
+    logger.fatal("IPFS couldn't be initialized: ", err);
+    throw err; // Rethrow to handle in main
+  }
+}
+
+///// EXPRESS SETUP /////
 const app = express();
 
-//cors
+// Apply middleware
 app.use(cors);
-
-//bodyParser
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 
-//network
-const host = process.env.HOST;
-const port = process.env.PORT;
-
-///// FRONT /////
-//ejs
+// View engine setup
 app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "views"));
 app.use(express.static(path.join(__dirname, "public")));
@@ -75,8 +83,17 @@ app.get("/", function (req, res) {
   res.render("transparency", { title: "Home", cssPath: "css/transparency.css" });
 });
 
-
 ///// ROUTES /////
+// Middleware to attach Helia to requests
+app.use(async (req, res, next) => {
+  try {
+    req.helia = await getHelia();
+    next();
+  } catch (err) {
+    next(err);
+  }
+});
+
 app.use("/ipfs", ipfsRoutes);
 app.use("/auth", authRoutes);
 app.use("/invoke", invokeRoutes);
@@ -84,98 +101,32 @@ app.use("/query", queryRoutes);
 app.use("/", frontRoutes);
 
 ///// ERROR MIDDLEWARE /////
-//executed if any other middleware yields an error
 app.use(error);
 
-///// SERVER INIT /////
-//create admin accounts if needed and start the server
-createAdmin()
-  .then(() => {
-    app.listen(port, host);
-    logger.info("****************** SERVER STARTED ************************");
-    logger.info("***************  http://%s:%s  ******************", host, port);
-  })
-  .catch((err) => {
-    logger.fatal("Server couldn't be initialized: ", err);
-  });
+///// ASYNC INITIALIZATION /////
+(async () => {
+  try {
+    // Initialize admin accounts
+    await createAdmin();
 
-//// IPFS ////
-const helia = createIpfsNode().then((helia) => {
-  // postTransparencyLog(helia);
-})
-.catch((err) => {
-  logger.fatal("IPFS couldn't be initialized: ", err);
-});
+    // Initialize IPFS node
+    await getHelia();
+    logger.info("IPFS node initialized");
 
-//transparency log: regularly post blockchain's tail to the IPFS
-// var cronJob = require("cron").CronJob;
-// new cronJob(process.env.LOG_CRONTAB, postTransparencyLog, null, true);
+    // Start server
+    const host = process.env.HOST;
+    const port = process.env.PORT;
+    app.listen(port, host, () => {
+      logger.info("****************** SERVER STARTED ************************");
+      logger.info("***************  http://%s:%s  ******************", host, port);
+    });
 
+    // Uncomment to enable transparency log cron job
+    // const cronJob = require("cron").CronJob;
+    // new cronJob(process.env.LOG_CRONTAB, () => postTransparencyLog(heliaInstance), null, true);
 
-
-/// OLD
-
-///// SERVER INIT /////
-// app.listen(port, host);
-// logger.info("****************** SERVER STARTED ************************");
-// logger.info("***************  http://%s:%s  ******************", host, port);
-
-// ///// ERROR MIDDLEWARE /////
-// //executed if any other middleware yields an error
-// app.use(error);
-
-// async function createNode () {
-//   const { noise } = await import("@chainsafe/libp2p-noise");
-//   const { yamux } = await import("@chainsafe/libp2p-yamux");
-//   const { bootstrap } = await import("@libp2p/bootstrap");
-//   const { tcp } = await import("@libp2p/tcp");
-//   const { MemoryBlockstore } = await import("blockstore-core");
-//   const { MemoryDatastore } = await import("datastore-core");
-//   const { createHelia } = await import("helia");
-//   const { createLibp2p } = await import("libp2p");
-//   const { identify } = await import("@libp2p/identify");
-  
-//   // the blockstore is where we store the blocks that make up files
-//   const blockstore = new MemoryBlockstore()
-
-//   // application-specific data lives in the datastore
-//   const datastore = new MemoryDatastore()
-
-//   // libp2p is the networking layer that underpins Helia
-//   const libp2p = await createLibp2p({
-//     datastore,
-//     addresses: {
-//       listen: [
-//         '/ip4/127.0.0.1/tcp/0'
-//       ]
-//     },
-//     transports: [
-//       tcp()
-//     ],
-//     connectionEncrypters: [
-//       noise()
-//     ],
-//     streamMuxers: [
-//       yamux()
-//     ],
-//     peerDiscovery: [
-//       bootstrap({
-//         list: [
-//           '/dnsaddr/bootstrap.libp2p.io/p2p/QmNnooDu7bfjPFoTZYxMNLWUQJyrVwtbZg5gBMjTezGAJN',
-//           '/dnsaddr/bootstrap.libp2p.io/p2p/QmQCU2EcMqAqQPR2i9bChDtGNJchTbq5TbXJJ16u19uLTa',
-//           '/dnsaddr/bootstrap.libp2p.io/p2p/QmbLHAnMoJPWSCR5Zhtx6BHJX9KiKNN6tpvbUcqanj75Nb',
-//           '/dnsaddr/bootstrap.libp2p.io/p2p/QmcZf59bWwK5XFi76CZX8cbJ4BhTzzA3gU1ZjYZcYW3dwt'
-//         ]
-//       })
-//     ],
-//     services: {
-//       identify: identify()
-//     }
-//   })
-
-//   return await createHelia({
-//     datastore,
-//     blockstore,
-//     libp2p
-//   })
-// }
+  } catch (err) {
+    logger.fatal("Application initialization failed: ", err);
+    process.exit(1);
+  }
+})();

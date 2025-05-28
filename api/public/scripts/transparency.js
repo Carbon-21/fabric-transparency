@@ -303,39 +303,52 @@ window.postTransparencyLog = async function () {
   const ipfsPublicationStatusDiv = document.getElementById("ipfsPublicationStatus");
   ipfsPublicationStatusDiv.innerHTML = ''; 
 
-  // Display a loading indicator
+  // Display loading indicator
   ipfsPublicationStatusDiv.innerHTML = `
-    <div class="d-flex align-items-center">
+    <div class="d-flex align-items-center text-primary">
       <strong>Publishing to IPFS...</strong>
-      <div class="spinner-border ms-auto" role="status" aria-hidden="true"></div>
+      <div class="spinner-border ms-2" role="status"></div>
     </div>`;
 
-  const url = `http://localhost:4000/ipfs/postTransparencyLog`;
-  const init = {
-    method: "POST",
-  };
-
   try {
-    const response = await fetch(url, init);
-    const responseData = await response.json();
+    const response = await fetch('/ipfs/postTransparencyLog', {
+      method: "POST"
+    });
 
-    if (response.ok) {
-      document.getElementById("flash").innerHTML = successFlashMessage;
-      // Update the display to show the CID
+    const responseData = await response.json();
+    
+    if (response.ok && responseData.success) {
+      // Create CID link to IPFS gateway
+      const cidLink = `https://ipfs.io/ipfs/${responseData.cid}`;
+      
       ipfsPublicationStatusDiv.innerHTML = `
         <div class="alert alert-success mt-3">
-          Transparency log successfully published to IPFS/IPNS! <br>
-          <strong>Published CID:</strong> <span class="limit">${responseData.cid}</span>
+          ✅ Transparency log successfully published!<br>
+          <strong>CID:</strong> 
+          <a href="${cidLink}" target="_blank" class="text-break">
+            ${responseData.cid}
+          </a>
+          <button class="btn btn-sm btn-outline-secondary ms-2" 
+                  onclick="navigator.clipboard.writeText('${responseData.cid}')">
+            Copy
+          </button>
         </div>`;
     } else {
-      
-      document.getElementById("flash").innerHTML = failureFlashMessage;
-      ipfsPublicationStatusDiv.innerHTML = `<div class="alert alert-danger mt-3">Failed to publish to IPFS: ${responseData.message || 'Unknown error'}</div>`;
-      console.error("HTTP Error:", response.status, responseData);
+      const errorMsg = responseData.message || 'Unknown error occurred';
+      ipfsPublicationStatusDiv.innerHTML = `
+        <div class="alert alert-danger mt-3">
+          ❌ Failed to publish: ${errorMsg}
+        </div>`;
     }
   } catch (error) {
-    document.getElementById("flash").innerHTML = failureFlashMessage;
-    ipfsPublicationStatusDiv.innerHTML = `<div class="alert alert-danger mt-3">Network error or IPFS node issue: ${error.message}</div>`;
-    console.error("Fetch error:", error);
+    ipfsPublicationStatusDiv.innerHTML = `
+      <div class="alert alert-danger mt-3">
+        ❌ Network error: ${error.message || 'Could not connect to server'}
+      </div>`;
   }
+  
+  // Ensure accordion stays open after operation
+  const accordion = new bootstrap.Collapse(document.getElementById('collapseThree'), {
+    show: true
+  });
 };

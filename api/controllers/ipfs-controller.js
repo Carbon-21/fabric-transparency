@@ -36,6 +36,40 @@ exports.postTransparencyLog = async (helia) => {
   }
 };
 
+exports.postTransparencyLogRoute = async (req, res, next) => {
+  const chaincodeName = "chaincode";
+  const channelName = "channel1";
+
+  try {
+    const helia = req.helia;
+    
+    // Get blockchain tail
+    let tail = await getBlockchainTailLocal(chaincodeName, channelName);
+    tail = JSON.stringify(tail, null, 4);
+
+    // Get world state
+    const ws = await getWorldStateLocal(chaincodeName, channelName);
+
+    // Write to IPFS and get CID
+    const cid = await ipfs.writeIPFS(tail, ws, helia);
+
+    if (cid) {
+      logger.info("Transparency log posted to IPFS with CID:", cid);
+      // Return consistent response format with CID string
+      res.status(200).json({ 
+        success: true,
+        message: "Transparency log posted to IPFS successfully", 
+        cid: cid.toString() // Ensure CID is string
+      });
+    } else {
+      logger.error("IPFS publication failed!");
+      next(new HttpError(500, "IPFS publication failed"));
+    }
+  } catch (error) {
+    logger.error("Error posting transparency log:", error);
+    next(new HttpError(500, "Error posting transparency log: " + error.message)); 
+  }
+};
 
 //get last block posted to IPFS
 //deprecated: IPFS' cid not save onchain anymore. we are now using IPNS. "last ipfs block" isn't displayed on logs page anymore, because... why doing it?

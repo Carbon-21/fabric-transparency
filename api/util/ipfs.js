@@ -96,7 +96,7 @@ exports.writeIPFS = async (tail, ws,helia) => {
     //initialize IPFS node if it didn't happen already
     //TODO
     //Verify if the node is not instanciated more then once
-    const helia = await createNode();
+    // const helia = await createNode();
 
     //create a filesystem on top of Helia, in this case it's UnixFS
     const ipfsFs = unixfs(helia);
