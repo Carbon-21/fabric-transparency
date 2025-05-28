@@ -69,7 +69,7 @@ exports.writeIPFS = async (tail, ws,helia) => {
     //generate IPNS key pair from a fixed seed
     const seed = new Uint8Array([
       1, 2, 3, 4, 5, 6, 7, 8,
-      9, 10, 11, 12, 13, 14, 15, 16,
+      9, 10, 11, 12, 11, 14, 15, 16,
       17, 18, 19, 20, 21, 22, 23, 24,
       25, 26, 27, 28, 29, 30, 31, 32
     ]);
@@ -137,15 +137,17 @@ exports.writeIPFS = async (tail, ws,helia) => {
     //cp tail_<timestamp>.txt . (arquivo é adicionado ao MFS)
     rootDirCid = await cp(ipfsFs, rootDirCid, signatureCid, fileName);
     logger.debug(`Added ${fileName} to root dir. Updated directory cid:`, rootDirCid.toString());
+    logger.info("IPFS, resulting CID: ",rootDirCid.toString())
 
     /////// IPNS //////
 
-    // publish the name
+    // publish to IPNS
     await ipnsName.publish(ipnsKeyPair, rootDirCid)
+    logger.info("CID linked to IPNS. IPNS:", ipnsKeyPair.publicKey.toCID(),ipnsKeyPair.publicKey.toString())
 
     // test: resolve the name
     const result = await ipnsName.resolve(ipnsKeyPair.publicKey)
-    logger.info(result.cid, result.path)
+    logger.info("Retrieved from IPNS: ", result.cid, result.path)
 
 
     return rootDirCid;
