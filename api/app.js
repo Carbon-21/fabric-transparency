@@ -99,8 +99,8 @@ createAdmin()
     logger.fatal("Server couldn't be initialized: ", err);
   });
 
-//// IPFS publication ////
-createIpfsNode().then((helia) => {
+//// IPFS ////
+const helia = createIpfsNode().then((helia) => {
   // postTransparencyLog(helia);
 })
 .catch((err) => {
