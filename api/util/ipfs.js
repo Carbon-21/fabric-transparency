@@ -97,17 +97,6 @@ exports.writeIPFS = async (tail, ws,helia) => {
     //create a filesystem on top of Helia, in this case it's UnixFS
     const ipfsFs = unixfs(helia);
 
-
-    // OLD IPNS
-    //deriver peer id from peer private key
-    // const keyInfo = await helia.libp2p.keychain.importKey("my-key", ipfsPrivateKey, process.env.IPFS_SECRET_KEY);
-    // const peerId = await helia.libp2p.keychain.exportPeerId(keyInfo.name);
-    // const ipnsConfig = ipns(helia, [
-    //   // configure routings here
-    // ]);
-
-    // TODO create root or fetch existing one
-    // getRootCid(peerId);
     let rootDirCid = await ipfsFs.addDirectory();
     logger.debug("Created root dir:", rootDirCid);
 
