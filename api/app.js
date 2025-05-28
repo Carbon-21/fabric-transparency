@@ -101,7 +101,7 @@ createAdmin()
 
 //// IPFS publication ////
 createIpfsNode().then((helia) => {
-  postTransparencyLog(helia);
+  // postTransparencyLog(helia);
 })
 .catch((err) => {
   logger.fatal("IPFS couldn't be initialized: ", err);
