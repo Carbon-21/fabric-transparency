@@ -8170,6 +8170,38 @@ window.getLatestIPFSBlock = async function () {
 };
 
 //retrieve blockchains's last block
+window.getBlockByNumber = async function () {
+  let block = blockNumber.value;
+
+  //make request to the backend
+  //make request to the backend
+  let url = `http://localhost:4000/query/channels/channel1/chaincodes/chaincode/getBlockByNumber?blockNumber=${block}`;
+  var init = {
+    method: "GET"
+  };
+  let response = await fetch(url, init);
+  if (response.ok) {
+    response = await response.json();
+
+    //set block info in HTML
+    document.getElementById("flash").innerHTML = successFlashMessage;
+    blockJson.innerText = JSON.stringify(response.block, null, 4);
+    number.innerText = response.blockNumber;
+    // blockHash.innerText = response.info.currentBlockHash;
+    // blockPreviousHash.innerText = response.info.previousBlockHash;
+
+    //timestamp to date
+    let timestamp = new Date(response.block.data.data[0].payload.header.channel_header.timestamp);
+    timestamp = convertTZ(timestamp, "America/Sao_Paulo"); //convert to BR timezone
+    timestamp = timestamp.getDate() + "/" + (timestamp.getMonth() + 1) + "/" + timestamp.getFullYear() + " " + timestamp.getHours() + ":" + timestamp.getMinutes() + ":" + timestamp.getSeconds();
+    blockTimestamp.innerText = timestamp;
+  } else {
+    document.getElementById("flash").innerHTML = failureFlashMessage;
+    console.log("HTTP Error ", response.status);
+  }
+};
+
+//retrieve blockchains's last block
 window.getBlockchainTail = async function () {
   //make request to the backend
   let url = `http://localhost:4000/query/channels/channel1/chaincodes/chaincode/getBlockchainTail`;

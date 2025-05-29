@@ -9,6 +9,17 @@ const router = Router();
 
 // UNAUTHENTICATHED ROUTES
 router.get(
+  "/channels/:channel/chaincodes/:chaincode/getBlockByNumber",
+  [
+    param("channel").trim().not().isEmpty().isString(),
+    param("chaincode").trim().not().isEmpty().isString(),
+    query("blockNumber").trim().not().isEmpty().isString(),
+    validateAll,
+  ],
+  queryController.getBlockByNumber
+);
+
+router.get(
   "/channels/:channel/chaincodes/:chaincode/getBlockchainTail",
   [param("channel").trim().not().isEmpty().isString(), param("chaincode").trim().not().isEmpty().isString(), validateAll],
   queryController.getBlockchainTail

@@ -97,6 +97,60 @@ exports.getWorldStateLocal = async (chaincodeName, channelName) => {
 };
 
 //get last block
+exports.getBlockByNumber = async (req, res, next) => {
+  const chaincodeName = req.params.chaincode;
+  const channelName = req.params.channel;
+  let blockNumber = req.query.blockNumber;
+
+  // //connect to the channel and get the
+  const [chaincode, gateway] = await helper.getChaincode("Org1", channelName, chaincodeName, "admin", next);
+
+  try {
+    //use QSCC
+    const network = await gateway.getNetwork(channelName);
+    const contract = network.getContract("qscc");
+
+    //get last block number
+    let info = await contract.evaluateTransaction("GetChainInfo", channelName);
+    info = fabproto6.common.BlockchainInfo.decode(info);
+    let tailNumber = info.height.low - 1;
+
+    //adjust initial block number, if needed
+    if (blockNumber === "beginning") blockNumber = 0;
+
+    //get block number, if user requested it
+    if (blockNumber === "end") blockNumber = tailNumber;
+
+    //if requested range is out of boundaries or isn't int => error
+    blockNumber = parseInt(blockNumber);
+    if (!Number.isInteger(blockNumber) || blockNumber < 0 || blockNumber > tailNumber) return next(new HttpError(500, "Invalid value."));
+
+
+    //get block
+    let block = await contract.evaluateTransaction("GetBlockByNumber", channelName, String(blockNumber));
+
+    //decode block
+    block = BlockDecoder.decode(block);
+
+    //decode block's fields, when possible
+    if (blockNumber > 1) decodeBlockBuffers(block);
+
+    //close communication channel
+    await gateway.disconnect();
+
+    //send OK response
+    logger.info(`Block fetched!`);
+    return res.json({
+      block,
+      info,
+      blockNumber
+    });
+  } catch (err) {
+    return next(new HttpError(500, err));
+  }
+};
+
+//get last block
 exports.getBlockchainTail = async (req, res, next) => {
   const chaincodeName = req.params.chaincode;
   const channelName = req.params.channel;
@@ -267,7 +321,7 @@ exports.getRangeOfBlocks = async (req, res, next) => {
     //if requested range is out of boundaries or isn't int => error
     min = parseInt(min);
     max = parseInt(max);
-    if (!Number.isInteger(min) || !Number.isInteger(max) || min < 0 || max < 0 || max > tailNumber || min > tailNumber || min >= max) return next(new HttpError(500, "Valor inválido."));
+    if (!Number.isInteger(min) || !Number.isInteger(max) || min < 0 || max < 0 || max > tailNumber || min > tailNumber || min >= max) return next(new HttpError(500, "Invalid value."));
 
     //put every requested block in the blocks array
     let blocks = [];
