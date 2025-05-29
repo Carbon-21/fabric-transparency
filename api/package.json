@@ -24,6 +24,7 @@
     "blockstore-core": "^5.0.2",
     "body-parser": "^1.19.0",
     "connect-flash": "^0.1.1",
+    "crypto-browserify": "^3.12.1",
     "datastore-core": "^10.0.2",
     "dotenv": "^16.0.3",
     "ejs": "^3.1.8",

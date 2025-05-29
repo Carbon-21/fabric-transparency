@@ -61,12 +61,13 @@ exports.getCidContent = async (req, res, next) => {
     const helia = req.helia;
     
     // Get content
-    const content = await ipfs.getCidContent(cid, helia);
+    const result = await ipfs.getCidContent(cid, helia);
 
-    if (content) {
+    if (result) {
       res.status(200).json({ 
         success: true,
-        content,
+        content: result.catContent,
+        pubKey: result.pubKey,
         message: "Content retrieved from IPFS successfully", 
       });
     } else {

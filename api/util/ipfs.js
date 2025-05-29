@@ -139,7 +139,7 @@ exports.writeIPFS = async (tail, ws, helia) => {
     logger.debug(`Added ${fileName} to root dir. Updated directory cid:`, rootDirCid.toString());
 
     //vim signed_tail_ws__<timestamp>.txt (cria arquivo fora do MFS ainda)
-    fileName = `signed_tail_ws_${timestamp}.txt`;
+    fileName = `RSA_SHA256_${timestamp}.txt`;
     const signatureCid = await helia.unixfs.addBytes(encoder.encode(tailWsSigned));
     logger.debug(`Added file ${fileName} to IPFS:`, signatureCid.toString());
 
@@ -168,7 +168,16 @@ exports.getCidContent = async (cid, helia) => {
   try {
     //get every file inside the unixfs and put on global varaible catContent
     await recursiveCat(helia.unixfs, cid);
-    return catContent;
+
+    //TODO verify on frontend
+    // verifySignature(catContent[0], Buffer.from(catContent[2].concat(catContent[3],catContent[1])));
+
+    //OLD TODO get pubkey on front
+    const cert = fs.readFileSync(path.join(__dirname, "../keys/ipfs-cert.pem"));
+    const pubKey = crypto.createPublicKey(cert);
+
+
+    return {catContent,pubKey};
     
   } catch (error) {
     logger.error(error)
@@ -215,6 +224,18 @@ const signContent = (tail, ws, cid) => {
   // verifySignature(signature, tailWs);
 
   return signature;
+};
+
+// verify signature using the signers' certificate
+const verifySignature = async (signature, content) => {
+  const cert = fs.readFileSync(path.join(__dirname, "../keys/ipfs-cert.pem"));
+  const pubKey = crypto.createPublicKey(cert);
+
+  verifier = crypto.createVerify("RSA-SHA256");
+  verifier.update(content);
+  result = verifier.verify(pubKey, signature, "base64");
+
+  logger.info("Resultado da verificação de assinatura:", result); //true or false
 };
 
 const cp = async (fs, dirCid, fileCid, fileName) => {
@@ -270,17 +291,7 @@ const getRootCid = async (ipnsConfig, peerId) => {
 
 
 
-//test function. verify signature using the signers' certificate
-const verifySignature = async (signature, content) => {
-  const cert = fs.readFileSync(path.join(__dirname, "../keys/ipfs-cert.pem"));
-  const pubKey = crypto.createPublicKey(cert);
 
-  verifier = crypto.createVerify("RSA-SHA256");
-  verifier.update(content);
-  result = verifier.verify(pubKey, signature, "base64");
-
-  logger.info("Resultado da verificação de assinatura:", result); //true or false
-};
 
 //// MFS Functions ////
 const ls = async (fs, dirCid) => {

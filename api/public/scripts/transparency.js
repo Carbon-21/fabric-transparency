@@ -1,5 +1,9 @@
 let sha = require("js-sha256");
 let asnjs = require("asn1.js");
+let crypto = require("crypto-browserify");
+// let buffer = require('buffer');
+// const fs = require("fs");
+// const path = require("path");
 
 // Flash messages that are displayed to the user in case of success or failure of the transaction execution
 const successFlashMessage =
@@ -41,6 +45,7 @@ window.getCidContent = async function () {
 
     const responseData = await response.json();
     if (response.ok && responseData.success) {
+      // await verify(responseData);
       ipfsPublicationStatusDiv.innerHTML = `
         <div class="alert alert-success mt-3">
           ✅ Content retrieved from IPFS!<br>
@@ -53,10 +58,10 @@ window.getCidContent = async function () {
             <pre><code class="content" id="blockJson">${responseData.content[2]}</code></pre>
           </details>
           <strong>Previous CID:</strong> 
-            ${responseData.content[0] ? responseData.content[0] : "None"}
+            ${responseData.content[1] ? responseData.content[1] : "None. Looks like this is the first IPFS publication."}
           <details>
             <summary><strong>Signature</strong></summary>
-            <pre><code class="content" id="blockJson">${responseData.content[1]}</code></pre>
+            <pre><code class="content" id="blockJson">${responseData.content[0]}</code></pre>
           </details>
         </div>`;
     } else {
@@ -73,6 +78,96 @@ window.getCidContent = async function () {
       </div>`;
   }
 };
+
+// NÃO FUNCIONA: crypto-browserify bugado
+//check if the signature on an IPFS publication is valid. This requires doing RSA(SHA256(WS+tail+prev_cid))
+async function verify(publication) {
+  const content = publication.content[2].concat(publication.content[3],publication.content[0]);
+  const signature = publication.content[1];
+  // const cert = `-----BEGIN CERTIFICATE-----
+  // MIIFrzCCA5egAwIBAgIUbyF0bDoIEjcPAZ4izfVJnGe4xckwDQYJKoZIhvcNAQEL
+  // BQAwZzELMAkGA1UEBhMCQlIxCzAJBgNVBAgMAlNQMQswCQYDVQQHDAJTUDEWMBQG
+  // A1UEAwwNY2FyYm9ubzIxLmNvbTEmMCQGCSqGSIb3DQEJARYXY2FyYm9ubzIxQGNh
+  // cmJvbm8yMS5jb20wHhcNMjMwOTE4MTEwMjAzWhcNMzMwOTE1MTEwMjAzWjBnMQsw
+  // CQYDVQQGEwJCUjELMAkGA1UECAwCU1AxCzAJBgNVBAcMAlNQMRYwFAYDVQQDDA1j
+  // YXJib25vMjEuY29tMSYwJAYJKoZIhvcNAQkBFhdjYXJib25vMjFAY2FyYm9ubzIx
+  // LmNvbTCCAiIwDQYJKoZIhvcNAQEBBQADggIPADCCAgoCggIBAMFh3X2U8l1daw5M
+  // mw61C8pvzfUztENNH0HND04vmVfHbmTkxb7UqNCBQWOhA/C7SfQb2sOllxtKiIWc
+  // n4AmZgaF5kvITas8Rc6fNjEu9dg53T5kYZNoVPLP095U8AG2CUX57Ug5dm0g+G6X
+  // 9LuN1T3eBqW2Loa7q+G3HOt8xSjNBkbGEJsGf0OGtacgzb4RIdj+SCaxjPa98tpm
+  // k1n2BJeh+1/gXwbXI4TLPzsdot4gGaAlrdfeWtMn46GxPK2PXxI63SLaGG1hKVJi
+  // huMNkvfWfm/kxGrLuxIefg3xrVuQXtqiPEz9xyhZAU6BDqCqNTAylAnARoQs+wjn
+  // DY60TryPuFntI2MMvTlHrwaMYnxac1scYfkvvPX4XDEdNMMtDIr5k+m/aB0KtKiR
+  // KbwRAjvTLkw2WPbMKbMpDP5QVSFkqFRTyGvCHq/Bwb4SKFhnOU6ILIgvVJr3adgt
+  // k4jm2IcdWRS/g2/A2oWKqzRvTcFYhoPXPdhW7jZfAFDdXjtY3guJImfUtJ4gLVY/
+  // w4jwdMWDe24W/22QPNtjJIzKVQG5Jhn1lVmIDHJ0DNgPTIM7G/+zhcdI9RQGOQ8r
+  // 7KTJWJHJ+lCUDOSztDXK1+kUV9EAhnyFLOElE17ajHe5j53A2tTQBxvPBPhB9uj7
+  // 0PoDs68DEbjquWAz2FWCy5NoJrWtAgMBAAGjUzBRMB0GA1UdDgQWBBSywAzZVQKO
+  // GhZzQdP9Lzt9pZ4l8jAfBgNVHSMEGDAWgBSywAzZVQKOGhZzQdP9Lzt9pZ4l8jAP
+  // BgNVHRMBAf8EBTADAQH/MA0GCSqGSIb3DQEBCwUAA4ICAQCbv+QxImL+NmTjYKCf
+  // NwJzUMXUeqr1/kwvtE1XSAYuJgN/tojnTFGpi1I6xHejkYLh0b9EJiWFwA2cwGf3
+  // Ww3sI0L4t7H/r51ieJ3saYlBvR12dpMIKebYZmtD79VFWRjsp2YEG4/LZR6RiMs5
+  // lgpZx0C9pxRUs9mEV2YS4RlvtjcIySed6tTGoFPH7zFSx0oOXD3V7sRz7CmDO5LC
+  // dBXWeOy1J6dtFIPGETbVWAzQPX7btsuc3B0NMveQPI3BFgEXiBrBiI+I4Q3MtwSl
+  // E/6eWWjzf0hoql+pqwDAKE7GFtA61sYWAmQCpxRho5NCrHOfZ4GjNQgYC1C467aV
+  // oh45+2MHC/4ntKTQV/Lzt3CPwQjIazOJ6kiwvVgEO+n5fDSZVfkVGAhaaFd9dHCM
+  // eR4jzaxLGSTiKXt9NiK5kWzSkrwq5cZbLVWen/85pP6Qv9kJ8ao9tB0ivmIaJdki
+  // GcYa+YQrSFwoYaXxtzxnMaf2QBKYArsWAPl8sGdHIVBOBAEoSYMynN5gtoRGAvbC
+  // mn2ZdcmkjmPIOu6EwHM4UXws/YntWxRkh2Fod6kumkTm4XOTFq7PFaeJsvMHjrHo
+  // lgq25gfvtlC52sjmdaRZx7Q8wR7KI57Fe9n6rOupglvdap4ikdT6dxiw4E6JeX/+
+  // xXXP4/leAh6qMRnyAZPlhjc8Xg==
+  // -----END CERTIFICATE-----`;
+  
+  // (async () => {
+  // const publicKey = await importRSAPublicKeyFromPEM(cert);
+  // const valid = await verifySignature(publicKey, signature, content);
+
+  // console.log("Signature valid?", valid);
+  // })();
+
+  //////////////////////////
+  let data = Buffer.from(content);
+  // // const pubKey = crypto.createPublicKey(cert);
+  // console.log("fs passou",pubKey);
+
+  verifier = crypto.createVerify("RSA-SHA256");
+  verifier.update(data);
+  console.log("fs passouaa",publication.pubKey);
+  result = verifier.verify(publication.pubKey, signature, "base64");
+
+  console.log("Resultado da verificação de assinatura:", result); //true or false
+
+  /////////////////////////////////
+  // Converting string to buffer
+  // let data = Buffer.from(content);
+
+  // Sign the data and returned signature in buffer
+  // let signature = crypto.sign(algorithm, data, privateKey);
+
+  // Verifying signature using crypto.verify() function
+  // let isVerified = crypto.verify("RSA-SHA256", data, publication.pubKey, signature);
+  // console.log(`Is signature verified: ${isVerified}`);
+
+//////////////////////
+
+
+  // let headerAsn = asnjs.define("headerAsn", function () {
+  //   this.seq().obj(this.key("Number").int(), this.key("PreviousHash").octstr(), this.key("DataHash").octstr());
+  // });
+
+  // let output = headerAsn.encode(
+  //   {
+  //     Number: parseInt(header.number.low),
+  //     PreviousHash: header.previous_hash.data,
+  //     DataHash: header.data_hash.data,
+  //   },
+  //   "der"
+  // );
+
+  // let hash = sha.sha256(output);
+
+  // return Buffer.from(hash, "hex").toString("base64");
+}
 
 //retrieve the content of an IPNS address (linked cid)
 window.getIpnsContent = async function () {
@@ -489,3 +584,54 @@ var calculateBlockHash = function (header) {
 
   return Buffer.from(hash, "hex").toString("base64");
 };
+
+
+//////////
+async function importRSAPublicKeyFromPEM(pem) {
+  console.log("a");
+  // Remove header, footer, and line breaks
+  const pemBody = pem
+    .replace(/-----BEGIN CERTIFICATE-----/, '')
+    .replace(/-----END CERTIFICATE-----/, '')
+    .replace(/\s+/g, '');
+    console.log("b");
+  const binaryDer = atob(pemBody);
+  const binaryDerBuffer = new Uint8Array(binaryDer.length);
+  console.log("c");
+  for (let i = 0; i < binaryDer.length; i++) {
+    binaryDerBuffer[i] = binaryDer.charCodeAt(i);
+  }
+  console.log("d");
+  // Import X.509 certificate and extract public key
+  const cert = await window.crypto.subtle.importCert
+    ? await window.crypto.subtle.importCert("x509", binaryDerBuffer.buffer)
+    : await window.crypto.subtle.importKey(
+        "spki",
+        binaryDerBuffer.buffer,
+        {
+          name: "RSASSA-PKCS1-v1_5",
+          hash: "SHA-256"
+        },
+        false,
+        ["verify"]
+      );
+      console.log("e");
+  return cert;
+}
+
+async function verifySignature(publicKey, signature, data) {
+  const encoder = new TextEncoder();
+  const dataBuffer = encoder.encode(data);
+  const sigBuffer = Uint8Array.from(atob(signature), c => c.charCodeAt(0));
+
+  const isValid = await crypto.subtle.verify(
+    {
+      name: "RSASSA-PKCS1-v1_5"
+    },
+    publicKey,
+    sigBuffer,
+    dataBuffer
+  );
+
+  return isValid;
+}

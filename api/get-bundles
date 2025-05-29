@@ -25,4 +25,4 @@ source ~/.profile
 #create logs-bundle.js
 echo "Creating transparency-bundle.js"
 browserify ./public/scripts/transparency.js > ./public/scripts/transparency-bundle.js -t babelify
-
+# browserify ./public/scripts/transparency.js -o ./public/scripts/transparency-bundle.js
