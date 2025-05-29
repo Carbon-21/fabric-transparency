@@ -20,46 +20,140 @@ const failureFlashMessage2 =
   `<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>` +
   `</div>`;
 
-//retrieve last block in IPFS
-window.getLatestIPFSBlock = async function () {
-  //loading...
-  document.getElementById("loader").style.display = "flex";
+//retrieve the content of a CID
+window.getCidContent = async function () {
+  let cidNumber = cid.value;
+  
+  const ipfsPublicationStatusDiv = document.getElementById("getCid");
+  ipfsPublicationStatusDiv.innerHTML = ''; 
+
+  // Display loading indicator
+  ipfsPublicationStatusDiv.innerHTML = `
+    <div class="d-flex align-items-center text-primary">
+      <strong>Retrieving from IPFS...</strong>
+      <div class="spinner-border ms-2" role="status"></div>
+    </div>`;
+
+  try {
+    const response = await fetch(`/ipfs/getCidContent?cid=${cidNumber}`, {
+      method: "GET"
+    });
+
+    const responseData = await response.json();
+    if (response.ok && responseData.success) {
+      ipfsPublicationStatusDiv.innerHTML = `
+        <div class="alert alert-success mt-3">
+          ✅ Content retrieved from IPFS!<br>
+          <details>
+            <summary><strong>World State</strong></summary>
+            <pre><code class="content" id="blockJson">${responseData.content[3]}</code></pre>
+          </details>
+          <details>
+            <summary><strong>Tail</strong></summary>
+            <pre><code class="content" id="blockJson">${responseData.content[2]}</code></pre>
+          </details>
+          <strong>Previous CID:</strong> 
+            ${responseData.content[0] ? responseData.content[0] : "None"}
+          <details>
+            <summary><strong>Signature</strong></summary>
+            <pre><code class="content" id="blockJson">${responseData.content[1]}</code></pre>
+          </details>
+        </div>`;
+    } else {
+      const errorMsg = responseData.message || 'Unknown error occurred';
+      ipfsPublicationStatusDiv.innerHTML = `
+        <div class="alert alert-danger mt-3">
+          ❌ Error: ${errorMsg}
+        </div>`;
+    }
+  } catch (error) {
+    ipfsPublicationStatusDiv.innerHTML = `
+      <div class="alert alert-danger mt-3">
+        ❌ Network error: ${error.message || 'Could not connect to server'}
+      </div>`;
+  }
+};
+
+//retrieve the content of an IPNS address (linked cid)
+window.getIpnsContent = async function () {
+  const ipfsPublicationStatusDiv = document.getElementById("ipnsGet");
+  ipfsPublicationStatusDiv.innerHTML = ''; 
+
+  // Display loading indicator
+  ipfsPublicationStatusDiv.innerHTML = `
+    <div class="d-flex align-items-center text-primary">
+      <strong>Retrieving from IPNS...</strong>
+      <div class="spinner-border ms-2" role="status"></div>
+    </div>`;
+
+  try {
+    const response = await fetch('/ipfs/getIpnsContent?ipnsAddress=bafzaajaiaejca3hgs6skjaabaoy722sqoiadxmvqqekrzdaeioxjnl67qigowi43', {
+      method: "GET"
+    });
+
+    const responseData = await response.json();
+    
+    if (response.ok && responseData.success) {
+      ipfsPublicationStatusDiv.innerHTML = `
+        <div class="alert alert-success mt-3">
+          ✅ Content retrieved from IPNS!<br>
+          <strong>CID:</strong> 
+            ${responseData.content}
+          <button class="btn btn-sm btn-outline-secondary ms-2" 
+                  onclick="navigator.clipboard.writeText('${responseData.content}')">
+            Copy
+          </button>
+        </div>`;
+    } else {
+      const errorMsg = responseData.message || 'Unknown error occurred';
+      ipfsPublicationStatusDiv.innerHTML = `
+        <div class="alert alert-danger mt-3">
+          ❌ Error: ${errorMsg}
+        </div>`;
+    }
+  } catch (error) {
+    ipfsPublicationStatusDiv.innerHTML = `
+      <div class="alert alert-danger mt-3">
+        ❌ Network error: ${error.message || 'Could not connect to server'}
+      </div>`;
+  }
+}
+
+//retrieve a block
+window.getBlockByNumber = async function () {
+  let block = blockNumber.value;
+  
 
   //make request to the backend
-  let url = `http://localhost:4000/ipfs/getLatestIPFSBlock`;
+  //make request to the backend
+  let url = `http://localhost:4000/query/channels/channel1/chaincodes/chaincode/getBlockByNumber?blockNumber=${block}`;
   var init = {
     method: "GET",
   };
   let response = await fetch(url, init);
-
-  //stop loading
-  document.getElementById("loader").style.display = "none";
 
   if (response.ok) {
     response = await response.json();
 
     //set block info in HTML
     document.getElementById("flash").innerHTML = successFlashMessage;
-    ipfsBlockNumber.innerText = String(response.tail.info.height - 1);
-    ipfsHash.innerText = response.tail.info.currentBlockHash;
-    ipfsPreviousHash.innerText = response.tail.info.previousBlockHash;
+    blockJson.innerText = JSON.stringify(response.block, null, 4);
+    number.innerText = response.blockNumber;
+    // blockHash.innerText = response.info.currentBlockHash;
+    // blockPreviousHash.innerText = response.info.previousBlockHash;
 
     //timestamp to date
-    let timestamp = new Date(response.tail.data.data[0].payload.header.channel_header.timestamp);
+    let timestamp = new Date(response.block.data.data[0].payload.header.channel_header.timestamp);
     timestamp = convertTZ(timestamp, "America/Sao_Paulo"); //convert to BR timezone
     timestamp = timestamp.getDate() + "/" + (timestamp.getMonth() + 1) + "/" + timestamp.getFullYear() + " " + timestamp.getHours() + ":" + timestamp.getMinutes() + ":" + timestamp.getSeconds();
-    ipfsTimestamp.innerText = timestamp;
-
-    //remove info from json, it doesn't belong to the original json
-    delete response.tail.info;
-    ipfsJson.innerText = JSON.stringify(response.tail, null, 4);
+    blockTimestamp.innerText = timestamp;
   } else {
-    document.getElementById("flash").innerHTML = failureFlashMessage2;
+    document.getElementById("flash").innerHTML = failureFlashMessage;
     console.log("HTTP Error ", response.status);
   }
 };
 
-//retrieve blockchains's last block
+//retrieve a block
 window.getBlockByNumber = async function () {
   let block = blockNumber.value;
   
@@ -143,14 +237,14 @@ window.getWorldState = async function () {
       htmlOutput =
         htmlOutput +
         "<p>" +
-        `<b> Origem: </b> <spam class="limit">${atob(element[2])
+        `<b> From: </b> <spam class="limit">${atob(element[2])
           .match(/CN=([^,]*)/g)[0]
           .replace("CN=", "")}</spam> <br/>` +
-        `<b> Destino: </b> <spam class="limit">${atob(element[0])
+        `<b> To: </b> <spam class="limit">${atob(element[0])
           .match(/CN=([^,]*)/g)[0]
           .replace("CN=", "")}</spam> <br/>` +
-        `<b> ID do Token: </b> <spam class="limit">${element[1]}</spam> <br/>` +
-        `<b> Quantidade: </b><spam class="limit">${element[3]}</spam> <br/>` +
+        `<b> Token ID: </b> <spam class="limit">${element[1]}</spam> <br/>` +
+        `<b> Amount: </b><spam class="limit">${element[3]}</spam> <br/>` +
         "<p>";
     });
     ws.innerHTML = htmlOutput;
@@ -305,6 +399,70 @@ window.calculateFileHash = async function () {
     hashResult.innerHTML = `<div class="alert alert-danger">Error calculating hash: ${error.message}</div>`;
     document.getElementById("flash").innerHTML = failureFlashMessage;
   }
+};
+
+window.postTransparencyLog = async function () {
+  const ipfsPublicationStatusDiv = document.getElementById("ipfsPublicationStatus");
+  ipfsPublicationStatusDiv.innerHTML = ''; 
+
+  // Display loading indicator
+  ipfsPublicationStatusDiv.innerHTML = `
+    <div class="d-flex align-items-center text-primary">
+      <strong>Publishing to IPFS...</strong>
+      <div class="spinner-border ms-2" role="status"></div>
+    </div>`;
+
+  try {
+    const response = await fetch('/ipfs/postTransparencyLog', {
+      method: "POST"
+    });
+
+    const responseData = await response.json();
+    
+    if (response.ok && responseData.success) {
+      ipfsPublicationStatusDiv.innerHTML = `
+        <div class="alert alert-success mt-3">
+          ✅ Transparency log successfully published!<br>
+          <strong>CID:</strong> 
+            ${responseData.cid}
+          <button class="btn btn-sm btn-outline-secondary ms-2" 
+                  onclick="navigator.clipboard.writeText('${responseData.cid}')">
+            Copy
+          </button>
+        </div>`;
+      // Create CID link to IPFS gateway
+      // const cidLink = `https://ipfs.io/ipfs/${responseData.cid}`;
+      
+      // ipfsPublicationStatusDiv.innerHTML = `
+      //   <div class="alert alert-success mt-3">
+      //     ✅ Transparency log successfully published!<br>
+      //     <strong>CID:</strong> 
+      //     <a href="${cidLink}" target="_blank" class="text-break">
+      //       ${responseData.cid}
+      //     </a>
+      //     <button class="btn btn-sm btn-outline-secondary ms-2" 
+      //             onclick="navigator.clipboard.writeText('${responseData.cid}')">
+      //       Copy
+      //     </button>
+      //   </div>`;
+    } else {
+      const errorMsg = responseData.message || 'Unknown error occurred';
+      ipfsPublicationStatusDiv.innerHTML = `
+        <div class="alert alert-danger mt-3">
+          ❌ Failed to publish: ${errorMsg}
+        </div>`;
+    }
+  } catch (error) {
+    ipfsPublicationStatusDiv.innerHTML = `
+      <div class="alert alert-danger mt-3">
+        ❌ Network error: ${error.message || 'Could not connect to server'}
+      </div>`;
+  }
+  
+  // Ensure accordion stays open after operation
+  // const accordion = new bootstrap.Collapse(document.getElementById('collapseThree'), {
+    // show: true
+  // });
 };
 
 

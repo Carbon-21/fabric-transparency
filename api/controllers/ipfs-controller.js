@@ -8,33 +8,96 @@ const { getBlockchainTailLocal, getWorldStateLocal } = require("./query-controll
 exports.createIpfsNode = async () => {
   try {
     const helia = await ipfs.createNode();
-    return helia;
+    if (helia) {
+      logger.info("IPFS environment initialized successfully!");
+      return helia;
+    }
 
   } catch (error) {
     return new HttpError(500, error);
   }
 }
 
-//post blockchain's tail to the IPFS
+//post blockchain's tail + world state + previous cid to the IPFS
 //used by crontab
-exports.postTransparencyLog = async (helia) => {
+exports.postTransparencyLog = async (req, res, next) => {
   const chaincodeName = "chaincode";
   const channelName = "channel1";
-  const org = "Org1";
 
   try {
-    //get tail
+    const helia = req.helia;
+    
+    // Get blockchain tail
     let tail = await getBlockchainTailLocal(chaincodeName, channelName);
     tail = JSON.stringify(tail, null, 4);
 
-    //get ws
+    // Get world state
     const ws = await getWorldStateLocal(chaincodeName, channelName);
 
-    //write tail, ws and signature(tails+ws) on ipfs
-    const cid = await ipfs.writeIPFS(tail, ws,helia);
-    cid ? logger.info("Transparency log posted to IPFS") : logger.error("IPFS publication failed! Transparency log not posted to IPFS");
+    // Write to IPFS and get CID
+    const cid = await ipfs.writeIPFS(tail, ws, helia);
+
+    if (cid) {
+      logger.info("Transparency log posted to IPFS with CID:", cid);
+      // Return consistent response format with CID string
+      res.status(200).json({ 
+        success: true,
+        message: "Transparency log posted to IPFS successfully", 
+        cid: cid.toString() // Ensure CID is string
+      });
+    } else {
+      logger.error("IPFS publication failed!");
+      next(new HttpError(500, "IPFS publication failed"));
+    }
   } catch (error) {
-    return new HttpError(500, error);
+    next(new HttpError(500, "Error posting transparency log: " + error)); 
+  }
+};
+
+exports.getCidContent = async (req, res, next) => {
+  const cid = req.query.cid;
+
+  try {
+    const helia = req.helia;
+    
+    // Get content
+    const content = await ipfs.getCidContent(cid, helia);
+
+    if (content) {
+      res.status(200).json({ 
+        success: true,
+        content,
+        message: "Content retrieved from IPFS successfully", 
+      });
+    } else {
+      next(new HttpError(500, "CID not found"));
+    }
+  } catch (error) {
+    next(new HttpError(500, "Error retrieving transparency log: " + error)); 
+  }
+};
+
+//get cid linked to the ipns address
+exports.getIpnsContent = async (req, res, next) => {
+  const ipnsAddress = req.query.ipnsAddress;
+
+  try {
+    const helia = req.helia;
+    
+    // Get content
+    const content = await ipfs.getIpnsContent(ipnsAddress, helia);
+
+    if (content) {
+      res.status(200).json({ 
+        success: true,
+        content,
+        message: "Content retrieved from IPNS successfully", 
+      });
+    } else {
+      next(new HttpError(500, "IPNS address not found. Is there something published on IPFS already?"));
+    }
+  } catch (error) {
+    next(new HttpError(500, "Error retrieving drom IPNS: " + error)); 
   }
 };
 

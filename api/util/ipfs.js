@@ -3,71 +3,72 @@ const fs = require("fs");
 const path = require("path");
 const crypto = require("crypto");
 
+let catContent = []
+
 exports.createNode = async () => {
-// async function createNode () {
-  const { noise } = await import("@chainsafe/libp2p-noise");
-  const { yamux } = await import("@chainsafe/libp2p-yamux");
-  const { bootstrap } = await import("@libp2p/bootstrap");
-  const { tcp } = await import("@libp2p/tcp");
-  const { MemoryBlockstore } = await import("blockstore-core");
-  const { MemoryDatastore } = await import("datastore-core");
-  const { createHelia } = await import("helia");
-  const { createLibp2p } = await import("libp2p");
-  const { identify } = await import("@libp2p/identify");
-  
-  // the blockstore is where we store the blocks that make up files
-  const blockstore = new MemoryBlockstore()
 
-  // application-specific data lives in the datastore
-  const datastore = new MemoryDatastore()
-
-  // libp2p is the networking layer that underpins Helia
-  const libp2p = await createLibp2p({
-    datastore,
-    addresses: {
-      listen: [
-        '/ip4/127.0.0.1/tcp/0'
-      ]
-    },
-    transports: [
-      tcp()
-    ],
-    connectionEncrypters: [
-      noise()
-    ],
-    streamMuxers: [
-      yamux()
-    ],
-    peerDiscovery: [
-      bootstrap({
-        list: [
-          '/dnsaddr/bootstrap.libp2p.io/p2p/QmNnooDu7bfjPFoTZYxMNLWUQJyrVwtbZg5gBMjTezGAJN',
-          '/dnsaddr/bootstrap.libp2p.io/p2p/QmQCU2EcMqAqQPR2i9bChDtGNJchTbq5TbXJJ16u19uLTa',
-          '/dnsaddr/bootstrap.libp2p.io/p2p/QmbLHAnMoJPWSCR5Zhtx6BHJX9KiKNN6tpvbUcqanj75Nb',
-          '/dnsaddr/bootstrap.libp2p.io/p2p/QmcZf59bWwK5XFi76CZX8cbJ4BhTzzA3gU1ZjYZcYW3dwt'
-        ]
-      })
-    ],
-    services: {
-      identify: identify()
-    }
-  })
-
-  return await createHelia({
-    datastore,
-    blockstore,
-    libp2p
-  })
-}
-
-exports.writeIPFS = async (tail, ws,helia) => {
   try {
+    const { noise } = await import("@chainsafe/libp2p-noise");
+    const { yamux } = await import("@chainsafe/libp2p-yamux");
+    const { bootstrap } = await import("@libp2p/bootstrap");
+    const { tcp } = await import("@libp2p/tcp");
+    const { MemoryBlockstore } = await import("blockstore-core");
+    const { MemoryDatastore } = await import("datastore-core");
+    const { createHelia } = await import("helia");
+    const { createLibp2p } = await import("libp2p");
+    const { identify } = await import("@libp2p/identify");
     const { unixfs } = await import("@helia/unixfs");
     const { ipns } = await import("@helia/ipns");
     const {generateKeyPairFromSeed } = await import ('@libp2p/crypto/keys')
+    
+    ///// CREATE IPFS NODE ////
+    // the blockstore is where we store the blocks that make up files
+    const blockstore = new MemoryBlockstore()
 
-    //generate IPNS key pair from a fixed seed
-    const seed = new Uint8Array([
+    // application-specific data lives in the datastore
+    const datastore = new MemoryDatastore()
+
+    // libp2p is the networking layer that underpins Helia
+    const libp2p = await createLibp2p({
+      datastore,
+      addresses: {
+        listen: [
+          '/ip4/127.0.0.1/tcp/0'
+        ]
+      },
+      transports: [
+        tcp()
+      ],
+      connectionEncrypters: [
+        noise()
+      ],
+      streamMuxers: [
+        yamux()
+      ],
+      peerDiscovery: [
+        bootstrap({
+          list: [
+            '/dnsaddr/bootstrap.libp2p.io/p2p/QmNnooDu7bfjPFoTZYxMNLWUQJyrVwtbZg5gBMjTezGAJN',
+            '/dnsaddr/bootstrap.libp2p.io/p2p/QmQCU2EcMqAqQPR2i9bChDtGNJchTbq5TbXJJ16u19uLTa',
+            '/dnsaddr/bootstrap.libp2p.io/p2p/QmbLHAnMoJPWSCR5Zhtx6BHJX9KiKNN6tpvbUcqanj75Nb',
+            '/dnsaddr/bootstrap.libp2p.io/p2p/QmcZf59bWwK5XFi76CZX8cbJ4BhTzzA3gU1ZjYZcYW3dwt'
+          ]
+        })
+      ],
+      services: {
+        identify: identify()
+      }
+    })
+
+    const helia = await createHelia({
+      datastore,
+      blockstore,
+      libp2p
+    })
+
+    //// CREATE IPNS OBJECT ////
+     //generate IPNS key pair from a fixed seed
+     const seed = new Uint8Array([
       1, 2, 3, 4, 5, 6, 7, 8,
       9, 10, 11, 12, 11, 14, 15, 16,
       17, 18, 19, 20, 21, 22, 23, 24,
@@ -75,16 +76,30 @@ exports.writeIPFS = async (tail, ws,helia) => {
     ]);
     const ipnsKeyPair = await generateKeyPairFromSeed('Ed25519',seed)
 
-    //initialize IPFS node and create IPNS object
-    // const helia = await createNode();
+    //create IPNS object
     const ipnsName = ipns(helia)
 
-    //get cid from current IPNS reference, if any
-    // const resulta = await ipnsName.resolve(ipnsKeyPair.publicKey)
-    // logger.info("OLHA O IPNS",resulta.cid, resulta.path)
+    //// CREATE UNIXFS OBJECT ////
+    const ipfsFs = unixfs(helia);
 
-    //sign tail+ws+previous_cid
-    const tailWsSigned = signContent(tail, ws,"");
+    return {ipfs:helia, ipnsKeyPair:ipnsKeyPair, ipns:ipnsName, unixfs:ipfsFs}
+  } catch (error) {
+    logger.error(error)
+  }
+}
+
+//write world state + tails + previous cid to ipfs. then link to ipns
+exports.writeIPFS = async (tail, ws, helia) => {
+  try {
+    //get cid from current IPNS reference, if any
+    let prevCid
+    try {
+      prevCid = await helia.ipns.resolve(helia.ipnsKeyPair.publicKey)
+    } catch (error) {  
+    }
+    
+    //sign tail+ws+prevCid
+    const tailWsSigned = signContent(tail, ws, prevCid);
 
     //we will use this TextEncoder to turn strings into Uint8Arrays
     const encoder = new TextEncoder();
@@ -93,64 +108,87 @@ exports.writeIPFS = async (tail, ws,helia) => {
     timestamp = Date.now().toString();
 
     //////IPFS//////
-
-    //create a filesystem on top of Helia, in this case it's UnixFS
-    const ipfsFs = unixfs(helia);
-
-    let rootDirCid = await ipfsFs.addDirectory();
+    let rootDirCid = await helia.unixfs.addDirectory();
     logger.debug("Created root dir:", rootDirCid);
 
     //vim world_state_<timestamp>.txt (cria arquivo fora do MFS ainda)
     let fileName = `world_state_${timestamp}.txt`;
-    const wsCid = await ipfsFs.addBytes(encoder.encode(ws));
+    const wsCid = await helia.unixfs.addBytes(encoder.encode(ws));
     logger.debug(`Added file ${fileName} to IPFS:`, wsCid.toString());
 
     //cp world_state_<timestamp>.txt . (arquivo é adicionado ao MFS)
-    rootDirCid = await cp(ipfsFs, rootDirCid, wsCid, fileName);
+    rootDirCid = await cp(helia.unixfs, rootDirCid, wsCid, fileName);
     logger.debug(`Added ${fileName} to root dir. Updated directory cid:`, rootDirCid.toString());
 
     //vim tail_<timestamp>.txt (cria arquivo fora do MFS ainda)
     fileName = `tail_${timestamp}.txt`;
-    const tailCid = await ipfsFs.addBytes(encoder.encode(tail));
+    const tailCid = await helia.unixfs.addBytes(encoder.encode(tail));
     logger.debug(`Added file ${fileName} to IPFS:`, tailCid.toString());
 
     //cp tail_<timestamp>.txt . (arquivo é adicionado ao MFS)
-    rootDirCid = await cp(ipfsFs, rootDirCid, tailCid, fileName);
+    rootDirCid = await cp(helia.unixfs, rootDirCid, tailCid, fileName);
+    logger.debug(`Added ${fileName} to root dir. Updated directory cid:`, rootDirCid.toString());
+
+    //vim prev_cid_<timestamp>.txt (cria arquivo fora do MFS ainda)
+    fileName = `prev_cid_${timestamp}.txt`;
+    const prevCidCid = await helia.unixfs.addBytes(prevCid ? encoder.encode(prevCid.cid.toString()) : encoder.encode(prevCid));
+    logger.debug(`Added file ${fileName} to IPFS:`, prevCidCid.toString());
+
+    //cp prev_cid_<timestamp>.txt . (arquivo é adicionado ao MFS)
+    rootDirCid = await cp(helia.unixfs, rootDirCid, prevCidCid, fileName);
     logger.debug(`Added ${fileName} to root dir. Updated directory cid:`, rootDirCid.toString());
 
     //vim signed_tail_ws__<timestamp>.txt (cria arquivo fora do MFS ainda)
     fileName = `signed_tail_ws_${timestamp}.txt`;
-    const signatureCid = await ipfsFs.addBytes(encoder.encode(tailWsSigned));
+    const signatureCid = await helia.unixfs.addBytes(encoder.encode(tailWsSigned));
     logger.debug(`Added file ${fileName} to IPFS:`, signatureCid.toString());
 
     //cp tail_<timestamp>.txt . (arquivo é adicionado ao MFS)
-    rootDirCid = await cp(ipfsFs, rootDirCid, signatureCid, fileName);
+    rootDirCid = await cp(helia.unixfs, rootDirCid, signatureCid, fileName);
     logger.debug(`Added ${fileName} to root dir. Updated directory cid:`, rootDirCid.toString());
     logger.info("IPFS, resulting CID: ",rootDirCid.toString())
 
     /////// IPNS //////
-
     // publish to IPNS
-    await ipnsName.publish(ipnsKeyPair, rootDirCid)
-    logger.info("CID linked to IPNS. IPNS:", ipnsKeyPair.publicKey.toCID(),ipnsKeyPair.publicKey.toString())
+    await helia.ipns.publish(helia.ipnsKeyPair, rootDirCid)
+    logger.info("CID linked to IPNS. IPNS:", helia.ipnsKeyPair.publicKey.toCID(),helia.ipnsKeyPair.publicKey.toString())
 
     // test: resolve the name
-    const result = await ipnsName.resolve(ipnsKeyPair.publicKey)
+    const result = await helia.ipns.resolve(helia.ipnsKeyPair.publicKey)
     logger.info("Retrieved from IPNS: ", result.cid, result.path)
-
 
     return rootDirCid;
   } catch (error) {
-    logger.error(error);
+    logger.error(error)
   }
 };
 
-const cp = async (fs, dirCid, fileCid, fileName) => {
-  const updatedDirCid = await fs.cp(fileCid, dirCid, fileName);
-
-  return updatedDirCid;
+//get content of a given cid
+exports.getCidContent = async (cid, helia) => {
+  try {
+    //get every file inside the unixfs and put on global varaible catContent
+    await recursiveCat(helia.unixfs, cid);
+    return catContent;
+    
+  } catch (error) {
+    logger.error(error)
+  }
 };
 
+//get cid linked to the ipns address
+exports.getIpnsContent = async (ipnsAddress, helia) => {
+  try {   
+    const result = await helia.ipns.resolve(helia.ipnsKeyPair.publicKey)
+    logger.info("Retrieved from IPNS: ", result.cid.toString())
+
+    return result.cid.toString()
+
+  } catch (error) {
+    logger.error(error)
+  }
+};
+
+/////// AUX //////
 //concat transparent log content (bc tail + ws). Then, sing and return it
 const signContent = (tail, ws, cid) => {
   //concat
@@ -179,6 +217,30 @@ const signContent = (tail, ws, cid) => {
   return signature;
 };
 
+const cp = async (fs, dirCid, fileCid, fileName) => {
+  const updatedDirCid = await fs.cp(fileCid, dirCid, fileName);
+
+  return updatedDirCid;
+};
+
+const cat = async (fs, fileCid) => {
+  const decoder = new TextDecoder();
+
+  for await (const buf of fs.cat(fileCid)) {
+    // logger.info(decoder.decode(buf));
+    // catContent += decoder.decode(buf);
+    catContent.push(decoder.decode(buf));
+  }
+};
+
+//cat everything from a dir
+const recursiveCat = async (fs, dirCid) => {
+  catContent = []
+  for await (const entry of fs.ls(dirCid)) {
+    await cat(fs, entry.cid);
+  }
+};
+
 //////// UNUSED (but useful) ///////
 const ipnsPublish = async (cid, peerId, ipnsConfig) => {
   try {
@@ -194,22 +256,7 @@ const ipnsPublish = async (cid, peerId, ipnsConfig) => {
   }
 };
 
-const readIPFS = async (cid) => {
-  try {
-    const { unixfs } = await import("@helia/unixfs");
 
-    //initialize IPFS node if it didn't happen already
-    if (!helia) await createNode();
-
-    // create a filesystem on top of Helia, in this case it's UnixFS
-    const fs = unixfs(helia);
-
-    // await ls(fs, cid);
-    await recursiveCat(fs, cid);
-  } catch (error) {
-    logger.error(error);
-  }
-};
 
 //TODO
 //get cid from IPNS (if it exists), otherwise create an MFS root dir and return its seed
@@ -220,20 +267,7 @@ const getRootCid = async (ipnsConfig, peerId) => {
   //...
 };
 
-const cat = async (fs, fileCid) => {
-  const decoder = new TextDecoder();
 
-  for await (const buf of fs.cat(fileCid)) {
-    logger.info(decoder.decode(buf));
-  }
-};
-
-//cat everything from a dir
-const recursiveCat = async (fs, dirCid) => {
-  for await (const entry of fs.ls(dirCid)) {
-    cat(fs, entry.cid);
-  }
-};
 
 
 //test function. verify signature using the signers' certificate

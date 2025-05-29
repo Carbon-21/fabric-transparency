@@ -1,5 +1,5 @@
 const { Router } = require("express");
-const { body } = require("express-validator");
+const { query } = require("express-validator");
 const { validateAll } = require("../util/validation");
 const ipfsController = require("../controllers/ipfs-controller.js");
 
@@ -7,7 +7,23 @@ const router = Router();
 
 //// UNAUTHENTICATED ROUTES ////
 router.post("/postTransparencyLog", ipfsController.postTransparencyLog);
-// router.get("/getLatestIPFSBlock", ipfsController.getLatestIPFSBlock);
 
+router.get(
+  "/getCidContent",
+  [
+    query("cid").trim().not().isEmpty().isString(),
+    validateAll,
+  ],
+  ipfsController.getCidContent
+);
+
+router.get(
+  "/getIpnsContent",
+  [
+    query("ipnsAddress").trim().not().isEmpty().isString(),
+    validateAll,
+  ],
+  ipfsController.getIpnsContent
+);
 
 module.exports = router;
