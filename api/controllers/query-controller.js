@@ -209,7 +209,7 @@ exports.getBlockchainTailLocal = async (chaincodeName, channelName) => {
     //get blockhain's tail
     let tail = await contract.evaluateTransaction("GetBlockByNumber", channelName, String(tailNumber));
     tail = BlockDecoder.decode(tail);
-    decodeBlockBuffers(tail); //additional decoding
+    // decodeBlockBuffers(tail); //additional decoding
 
     //close communication channel
     await gateway.disconnect();

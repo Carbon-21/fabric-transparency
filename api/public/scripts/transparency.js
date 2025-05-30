@@ -1,6 +1,6 @@
 let sha = require("js-sha256");
 let asnjs = require("asn1.js");
-let crypto = require("crypto-browserify");
+// let cryptoBrowserify = require("crypto-browserify");
 // let buffer = require('buffer');
 // const fs = require("fs");
 // const path = require("path");
@@ -51,14 +51,20 @@ window.getCidContent = async function () {
           ✅ Content retrieved from IPFS!<br>
           <details>
             <summary><strong>World State</strong></summary>
-            <pre><code class="content" id="blockJson">${responseData.content[3]}</code></pre>
+            <pre><code class="content" id="blockJson">${responseData.content[5]}</code></pre>
           </details>
           <details>
             <summary><strong>Tail</strong></summary>
-            <pre><code class="content" id="blockJson">${responseData.content[2]}</code></pre>
+            <pre><code class="content" id="blockJson">${responseData.content[4]}</code></pre>
           </details>
-          <strong>Previous CID:</strong> 
-            ${responseData.content[1] ? responseData.content[1] : "None. Looks like this is the first IPFS publication."}
+          <strong>First CID:</strong> 
+            ${responseData.content[2] ? responseData.content[2] : "Self."}
+          <br/><strong>Previous CID:</strong> 
+            ${responseData.content[3] ? responseData.content[3] : "None. This is the first IPFS publication."}
+          <details>
+            <summary><strong>Digital certificate (X509)</strong></summary>
+            <pre><code class="content" id="blockJson">${responseData.content[1]}</code></pre>
+          </details>
           <details>
             <summary><strong>Signature</strong></summary>
             <pre><code class="content" id="blockJson">${responseData.content[0]}</code></pre>
@@ -351,7 +357,81 @@ window.getWorldState = async function () {
   }
 };
 
-//retrieve all blocks, hash them and check if the resulting hashes match the retrieved ones
+//retrieve all blocks, hash them and check if the resulting hashes match the retrieved ones. also, hash the first block on IPFS and compare it to the one provided by the blockchain network.
+window.checkBlockchainAuto = async function () {
+  let blocksDiv = document.getElementById("autoBlocks");
+  blocksDiv.innerHTML = '';
+
+  //make request to the backend
+  let url = `http://localhost:4000/query/channels/channel1/chaincodes/chaincode/getRangeOfBlocks?min=beginning&max=end`;
+  var init = {
+    method: "GET",
+  };
+  
+  let response = await fetch(url, init);
+
+  if (response.ok) {
+    response = await response.json();
+    blocksDiv.innerHTML += '- Retrieved all blocks from the blockchain...';
+
+    //hash every block and check if they correspond to the previousHash field in the following block
+    let blocksMatch = true;
+    const numBlocks = response.max - response.min;
+
+    for (let i = 0; i < numBlocks; i++) {
+      //get hashes
+      let calculatedHash = calculateBlockHash(response.blocks[i].header);
+      let nextBlockPreviousHash = Buffer.from(response.blocks[i + 1].header.previous_hash).toString("base64");
+
+      //uncomment if you want to test a non matching scenario
+      // i === 1 ? (calculatedHash = "a1p4p41") : (calculatedHash = calculatedHash);
+
+      //print if hashes match
+      if (calculatedHash !== nextBlockPreviousHash) blocksMatch = false;
+     
+    }
+
+    //print final result
+    blocksMatch
+      ? (blocksDiv.innerHTML += `<br/>- The block hashes match those sent by the blockchain network! ✅`)
+      : (blocksDiv.innerHTML += `<br/>- The block hashes do not match those sent by the blockchain network! ❌`);
+
+
+    //get first tail on IPFS
+    const responseData = await fetch('/ipfs/getFirstTailOnIPFS', {
+      method: "GET"
+    });
+    const firstTail = await responseData.json();
+
+    if (!firstTail) blocksDiv.innerHTML += `<br/>- There are no publications on IPFS. Consider publishing under the tab "IPFS"! ⚠️`
+    else{
+      //get block number
+      const match = firstTail.match(/"low":\s*(\d+)/);
+      const blockNumber = parseInt(match[1]);
+      
+      //hash the block
+      const firstTailHeader = JSON.parse(firstTail).header;
+      let firstTailHash = calculateBlockHash(firstTailHeader);
+
+      //compare IPFS block and blockchain block
+      // let calculatedHash = calculateBlockHash(response.blocks[i].header);
+      firstTailHash === calculateBlockHash(response.blocks[blockNumber].header)
+      ? (blocksDiv.innerHTML += `<br/>- The hash of the first tail published on IPFS (block #${blockNumber}) matches the hash of block #${blockNumber} provided by the blockchain network! ✅<br/>Done.`)
+      : (blocksDiv.innerHTML += `<br/>- The hash of the first tail published on IPFS (block #${blockNumber}) DOES NOT match the hash of block #${blockNumber} provided by the blockchain network! ❌<br/>Done.`);
+
+    }
+    
+
+    //requisition success message
+    // document.getElementById("flash").innerHTML = successFlashMessage;
+  } else {
+    // document.getElementById("flash").innerHTML = failureFlashMessage;
+    console.log("HTTP Error ", response.status);
+    console.log(response);
+  }
+};
+
+//retrieve a range of blocks, hash them and check if the resulting hashes match the retrieved ones
 window.checkBlockchain = async function () {
   //get requested values
   let minHtml = min.value;
@@ -408,9 +488,67 @@ window.checkBlockchain = async function () {
   }
 };
 
+//check if chaincode deployed matches the one on github repository
+window.calculateFileHashAuto = async function () {
+  const ccDiv = document.getElementById("autoCC");
+  ccDiv.innerHTML = '';
+  let match = false;
+  
+  
+  try {
+    //get smart contract from github
+    const arrayBuffer = await downloadChaincode();
+
+    ccDiv.innerHTML += `- Smart contract retrieved from <a href="https://github.com/Carbon-21/fabric-transparency/blob/main/chaincode/chaincode.tgz">Github</a>...`
+
+    ///// GET BLOCKS WITH CHAINCODE DEPLOYMENT ////
+    //make request to the backend
+    let url = `http://localhost:4000/query/channels/channel1/chaincodes/chaincode/getBlocksWithChaincodeDeployment`;
+    var init = {
+      method: "GET",
+    };
+    let response = await fetch(url, init);
+
+    if (response.ok) {
+      response = await response.json();  
+    } 
+    else {
+      document.getElementById("flash").innerHTML = failureFlashMessage;
+      console.log("HTTP Error ", response.status);
+    }
+
+    
+    // Hash then convert to hex string
+    const hashBuffer = await crypto.subtle.digest('SHA-256', arrayBuffer);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    const fileHash = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+
+    // Go through all chaincode deployments in the blockchain
+    for (let i = 0; i < response.hashes.length; i++) {
+
+      // A block may contain more than one chaincode deployment
+      for (let j = 0; j < response.hashes[i].length; j++) {
+
+        // Check if the file hash matches a deployment hash in the blockchain
+        if (String(response.hashes[i][j]) == String(fileHash)) match = true;
+        else match = false;
+      }
+
+      if (!match) ccDiv.innerHTML += `<br/>- The file hash does not any smart contract deployment hash in the blockchain... ❌ `
+      else ccDiv.innerHTML += `<br/>- The file hash matches the latest smart contract deployment hash, in block ${response.indexes[i]}! ✅<br/>Done.`;
+
+    }
+  } catch (error) {
+    console.log(error);
+  }
+  
+}
+
+//check if chaincode deployed matches the one uploaded
 window.calculateFileHash = async function () {
-  const fileInput = document.getElementById('contractFile');
   const hashResult = document.getElementById('hashResult');
+  const fileInput = document.getElementById('contractFile');
+  let match = false;
 
   if (!fileInput.files || fileInput.files.length === 0) {
     hashResult.innerHTML = '<div class="alert alert-warning">Please select a file first</div>';
@@ -427,14 +565,11 @@ window.calculateFileHash = async function () {
     let response = await fetch(url, init);
 
     if (response.ok) {
-      response = await response.json();
-      console.log(response)
-  
+      response = await response.json();  
     } 
     else {
       document.getElementById("flash").innerHTML = failureFlashMessage;
       console.log("HTTP Error ", response.status);
-      console.log(response);
     }
 
     ////// HASH FILE ///////
@@ -442,9 +577,11 @@ window.calculateFileHash = async function () {
     hashResult.innerHTML = '<div class="d-flex align-items-center"><strong>Calculating hash...</strong><div class="spinner-border ms-auto" role="status" aria-hidden="true"></div></div>';
     let matchMessage = `The file hash does NOT match any smart contract deployment hash in the blockchain!`
     let deploymentsMessage = ""
-
+    
     const file = fileInput.files[0];
+    console.log("file",file)
     const arrayBuffer = await file.arrayBuffer();
+    console.log("arrayBuffer",arrayBuffer)
     const hashBuffer = await crypto.subtle.digest('SHA-256', arrayBuffer);
 
     // Convert hash to hex string
@@ -468,10 +605,13 @@ window.calculateFileHash = async function () {
       for (let j = 0; j < response.hashes[i].length; j++) {
 
         // Check if the file hash matches a deployment hash in the blockchain
-        if (String(response.hashes[i][j]) == String(fileHash)) {
-          matchMessage = `The file hash matches a smart contract deployment hash in block ${response.indexes[i]}!`;
-        } 
+        if (String(response.hashes[i][j]) == String(fileHash)) match = true;
+        else match = false;
       }
+
+      if (!match) matchMessage = `<br/>The file hash does not any smart contract deployment hash in the blockchain... ❌ `
+      else matchMessage = `<br/>The file hash matches the latest smart contract deployment hash, in block ${response.indexes[i]}! ✅`;
+
     }
 
     // Display results
@@ -585,7 +725,17 @@ var calculateBlockHash = function (header) {
   return Buffer.from(hash, "hex").toString("base64");
 };
 
+async function downloadChaincode() {
+  try {
+    const response = await fetch('https://raw.githubusercontent.com/Carbon-21/fabric-transparency/main/chaincode/chaincode.tgz')
 
+    const arrayBuffer = await response.arrayBuffer();
+    // const file = new Uint8Array(arrayBuffer); // this is the binary data
+    return arrayBuffer;
+  } catch (error) {
+    console.log(error)
+  }
+}
 //////////
 async function importRSAPublicKeyFromPEM(pem) {
   console.log("a");

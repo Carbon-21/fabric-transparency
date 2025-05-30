@@ -26,4 +26,11 @@ router.get(
   ipfsController.getIpnsContent
 );
 
+router.get(
+  "/getFirstTailOnIPFS",
+  ipfsController.getFirstTailOnIPFS
+);
+
+
+
 module.exports = router;
