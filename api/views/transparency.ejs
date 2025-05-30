@@ -15,33 +15,51 @@
         <!-- Page Title -->
         <h1 class="features-header">Transparency portal</h1>
 
-        <h4>Automatic audit tool</h4>
-        <div class="mt-3"><strong>Smart contract:</strong></div>
+        <h5>Automatic audit</h5>
+        <div class="mt-1"><strong>Smart contract:</strong></div>
         <div id="autoCC"></div>
 
         <div class="mt-3"><strong>Blocks:</strong></div>
         <div id="autoBlocks"></div>
 
-        <h4 class="mt-5">Manual audit tools</h4>
+        <h5 class="mt-4">Audit tools</h5>
+        In this section, each transparency feature is explained, alongside the federation attacks that they can detect. The available mechanisms can be used individually or in combination. It is possible to achieve the same results as the automatic audit above, but in a more granualar and detailed way, allowing for close inspection of the blockchain data.
 
-        <div class="accordion" id="accordionExample">
-          <!-- Accordion's collapsable 1 -->
+        <div class="accordion mt-3" id="accordionExample">
+
+          <!-- Accordion's collapsable 5 -->
           <div class="accordion-item">
             <!-- Title -->
-            <h2 class="accordion-header" id="headingOne">
-              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="false" aria-controls="collapseOne">World state</button>
+            <h2 class="accordion-header" id="headingFive">
+              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFive"
+                aria-expanded="false" aria-controls="collapseFive">
+                Smart contract verification
+              </button>
             </h2>
-
             <!-- Content -->
-            <div id="collapseOne" class="accordion-collapse collapse" aria-labelledby="headingOne" data-bs-parent="#accordionExample">
+            <div id="collapseFive" class="accordion-collapse collapse" aria-labelledby="headingFive"
+              data-bs-parent="#accordionExample">
               <div class="accordion-body">
-                <spam class="description">Using the World State, it is possible to reconstruct the balance of each wallet on another network</spam>
+                <spam class="description"><strong> Detectable attacks:</strong><br/>- <u>Alternative smart contract</u>: the federation deploys a smart contract that is not the one alleged.<br/>- <u>Backdoors that favour the federation</u>: can be identified by specialized monitors by reading and executing the open source smart contract.</spam><br/><br/>
+                <spam class="description"><strong> Mechanism:</strong> Here you can run the same test as in the automatic audit. Our smart contract is open source and available at
+                  <a href="https://github.com/Carbon-21/fabric-transparency/blob/main/chaincode/chaincode.tgz">Github</a>. You may download it and upload it below. Your browser
+                  is going to hash it (SHA-256) and compare it to the latest smart contract allegedly deployed on the blockchain. To do so, the browser requests the blockchain 
+                  blocks and look for smart contract deployment hashes. Since every member of the federation provides such data, unless all of them spoof the deployment hash, this mechanism
+                  guarantees that the code on Github is the one being used to define the business logic.</spam>
+
                 <div class="mt-3">
-                  <div id="ws"></div>
+                  <div class="input-group mb-3">
+                    <input type="file" class="form-control" id="contractFile" aria-describedby="fileHelp">
+                    <button class="btn btn-primary" style="background-color: #1fac1f; border-color: #d1e7dd" type="button"
+                      id="calculateHashBtn" onclick="calculateFileHash()">Calculate Hash</button>
+                  </div>
+                  <div id="hashResult" class="mt-3"></div>
                 </div>
               </div>
             </div>
           </div>
+            
+          
 
           <!-- Accordion's collapsable 2 -->
           <div class="accordion-item">
@@ -54,15 +72,15 @@
 
             <!-- Content -->
             <div id="collapseTwo" class="accordion-collapse collapse" aria-labelledby="headingTwo" data-bs-parent="#accordionExample">
-              <div class="accordion-body">
-                <!-- <spam class="description">Tail. This is currently the last block. You can send it to the IPFS.</spam> -->
-                <spam class="description"
-                  >Request a given block. You can use it to check transactions hashes (including smart contract deployments) and corresponding signatures, for instance.
-                  <br /><br />Enter numbers or the keywords 'beginning' or 'end'.
+              <div class="accordion-body"><spam class="description"><strong>Detectable attacks:</strong><br/>- <u>Invalid data</u>: should not be in the blockchain, such as transactions that are not defined in the smart contract.
+                <br/>- <u>Incoherent data</u>: are not the same for every member of the federation.</spam><br/><br/>
+                <spam class="description"><strong> Mechanism: </strong>Here you can request specific blocks. You can use ths mechanism to check general blockchain data, transactions hashes (including smart contract deployments) and corresponding signatures.
+                  Every member of the federation should provide the same block.
+                  <p><small><br />Enter the desired block number below. Alternatively, use 'beginning' or 'end' ro retrieve the first and last blocks, respectively.</small></p>
                 </spam>
 
                 <div class="input-group mt-3 mb-3">
-                  <input id="blockNumber" type="text" class="form-control mr-3 w-25" placeholder="Block number or keyword" />
+                  <input id="blockNumber" type="text" class="form-control mr-3 w-25" placeholder="Block" />
                   <button class="btn btn-primary w-25" style="background-color: #1fac1f; border-color: #d1e7dd" type="button" onclick="getBlockByNumber()">Request</button>
                 </div>
                 <div class="mt-3">
@@ -83,56 +101,6 @@
             </div>
           </div>
 
-          <!-- Accordion's collapsable 3 -->
-          <div class="accordion-item">
-            <h2 class="accordion-header" id="headingThree">
-              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseThree"
-                aria-expanded="false" aria-controls="collapseThree">
-                IPFS
-              </button>
-            </h2>
-            <div id="collapseThree" class="accordion-collapse collapse" aria-labelledby="headingThree"
-              data-bs-parent="#accordionExample">
-              <div class="accordion-body">
-                <p class="description">
-                  Ideally the content is published on IPFS periodically.
-                  To make this proof of concept more intuitive, click the button below to do so.
-                </p>
-
-                <div class="mt-3">
-                  <button class="btn btn-primary" id="postIpfsLogBtn" onclick="postTransparencyLog()">
-                    Publish current blockchain state to IPFS
-                  </button>
-                  <div id="ipfsPublicationStatus" class="mt-3"></div>
-                </div>
-
-                <br/><br/><p class="description">
-                  Get some CID
-                </p>
-                <div class="input-group mt-3 mb-3">
-                  <input id="cid" type="text" class="form-control mr-3 w-25" placeholder="CID" />
-                  <button class="btn btn-primary w-25" style="background-color: #1fac1f; border-color: #d1e7dd" type="button" onclick="getCidContent()">Request</button>
-                </div>
-                <div id="getCid" class="mt-3"></div>
-                
-
-                <br/><br/><p class="description">
-                  bafzaajaiaejca3hgs6skjaabaoy722sqoiadxmvqqekrzdaeioxjnl67qigowi43
-                </p>
-                <div class="mt-3">
-                  <button class="btn btn-primary" id="postIpfsLogBtn" onclick="getIpnsContent()">
-                    Get the CID linked to the IPNS address
-                    <!-- talvez seja 12D3KooWH9U8urNbXLR73AFqVLc1MfiYrkMwF6GDYjYkmwb3zZBG na verdade -->
-                  </button>
-                  <div id="ipnsGet" class="mt-3"></div>
-                </div>
-
-              </div>
-            </div>
-          </div>
-
-          
-
           <!-- Accordion's collapsable 6 -->
           <div class="accordion-item">
             <!-- Title -->
@@ -145,10 +113,12 @@
             <!-- Content -->
             <div id="collapseFour" class="accordion-collapse collapse" aria-labelledby="headingSix" data-bs-parent="#accordionExample">
               <div class="accordion-body">
-                <spam class="description"
-                  >Request from the network a specific sequence of blocks, each containing the hash of the previous block. Your computer will then calculate the hashes of the received blocks and verify whether they match the hashes sent by the blockchain network.
-                  <br /><br />Enter numbers or the keywords 'beginning' and 'end'.
-                </spam>
+                <spam class="description"><strong>Detectable attacks:</strong><br/>- <u>Discrete modification</u>: the federation silently modifies the content of the blockchain, without readjusting the hash chain.
+                  <br/>- <u>Incoherent data</u>: are not the same for every member of the federation.</spam><br/><br/>
+                  <spam class="description"><strong> Mechanism: </strong>Request a specific sequence of blocks from the network, each containing the hash of the previous block. Then, your browser calculates the 
+                    hashes of the received blocks and verify whether they match the hashes sent by the blockchain network. In the automatic audit process, this is done for all of the blocks.
+                    <p><small><br />Enter the desired block numbers below. Alternatively, use 'beginning' or 'end' ro retrieve the first and last blocks, respectively.</small></p>
+                  </spam>
 
                 <div class="input-group mt-3 mb-3">
                   <input id="min" type="text" class="form-control mr-3 w-25" placeholder="First block" />
@@ -163,33 +133,89 @@
             </div>
           </div>
 
-          <!-- Accordion's collapsable 5 -->
+          <!-- Accordion's collapsable 3 -->
           <div class="accordion-item">
-            <!-- Title -->
-            <h2 class="accordion-header" id="headingFive">
-              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFive"
-                aria-expanded="false" aria-controls="collapseFive">
-                Smart contract verification
+            <h2 class="accordion-header" id="headingThree">
+              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseThree"
+                aria-expanded="false" aria-controls="collapseThree">
+                IPFS
               </button>
             </h2>
-            <!-- Content -->
-            <div id="collapseFive" class="accordion-collapse collapse" aria-labelledby="headingFive"
+            <div id="collapseThree" class="accordion-collapse collapse" aria-labelledby="headingThree"
               data-bs-parent="#accordionExample">
               <div class="accordion-body">
-                <spam class="description">Our smart contract is open source and available at
-                  <a href="https://github.com/Carbon-21/fabric-transparency/blob/main/chaincode/chaincode.tgz">Github</a>. You may download it
-                  and verify if its hash corresponds to the one alleged on the blockchain.</spam>
+                <spam class="description"><strong>Detectable attacks:</strong><br/>- <u>Alternative chain</u>: the federation modifies the content of the blockchain and adjusts the hash chain, thus passing the integrity test on the "hash chain verification" mechanism above. 
+                  <br/>- <u>Split view</u>: different data are provided to different monitors.</spam><br/><br/>
+                  <spam class="description"><strong> Mechanism: </strong> This work proposes publishing transparency logs—containing partial blockchain states—on the InterPlanetary File System (IPFS). The goal is to enable external entities, not part of the blockchain federation,
+                  to store portions of the blockchain. Consequently, they can check if the data remains unchanged over time, thus discouraging misbehavior by the federation.
+                  <p><small><br />The logs should be published on IPFS periodically. However, to make this proof of concept more interactive, click the button below to do so. </small></p>
+                  </spam>
 
                 <div class="mt-3">
-                  <div class="input-group mb-3">
-                    <input type="file" class="form-control" id="contractFile" aria-describedby="fileHelp">
-                    <button class="btn btn-primary" style="background-color: #1fac1f; border-color: #d1e7dd" type="button"
-                      id="calculateHashBtn" onclick="calculateFileHash()">Calculate Hash</button>
-                  </div>
-                  <div id="hashResult" class="mt-3"></div>
+                  <button class="btn btn-primary" style="background-color: #1fac1f; border-color: #d1e7dd" id="postIpfsLogBtn" onclick="postTransparencyLog()">
+                    Publish current blockchain state to IPFS
+                  </button>
+                  <div id="ipfsPublicationStatus" class="mt-3"></div>
+                </div>
+
+                <br/><spam class="description">
+                  Each transparency log includes the current tail (last block) of the blockchain and the world state, a snapshot that allows the blockchain to be forked from a point prior to an attack. Publications are sequentially linked, forming an append-only structure on IPFS.
+                  Additionally, each log is signed by the federation and includes the digital certificate of its members, ensuring authenticity and providing non-repudiation in case of alternative chain attacks.
+                  <p><br/><small>Publishing on IPFS generates a content identifier (CID), which is the hash of the payload. Insert a CID below to find the corresponding publication and retrieve its content.</small></p>
+
+                </spam>
+
+                <div class="input-group mt-3 mb-3">
+                  <input id="cid" type="text" class="form-control mr-3 w-25" placeholder="CID" />
+                  <button class="btn btn-primary w-25" style="background-color: #1fac1f; border-color: #d1e7dd" type="button" onclick="getCidContent()">Request</button>
+                </div>
+                <div id="getCid" class="mt-3"></div>
+                
+
+                <br/><spam class="description">
+                  This proof of concept also uses the Interplanetary NameSystem (IPNS), which facilitates finding publications made by the federation. Every time a new log is published, its CID is linked to the hash of a public key.
+                  This allows audit systems to subscribe to this address and automatically receive every new transparency log.
+                  <p><br/><small>Below, you can check that the IPNS address (bafzaajaiaejca3hgs6skjaabaoy722sqoiadxmvqqekrzdaeioxjnl67qigowi43) always points to the latest CID.</small></p>
+
+                </spam>
+                <div class="mt-3">
+                  <button class="btn btn-primary" style="background-color: #1fac1f; border-color: #d1e7dd" id="postIpfsLogBtn" onclick="getIpnsContent()">
+                    Retrieve IPNS content
+                    <!-- talvez seja 12D3KooWH9U8urNbXLR73AFqVLc1MfiYrkMwF6GDYjYkmwb3zZBG na verdade -->
+                  </button>
+                  <div id="ipnsGet" class="mt-3"></div>
+                </div>
+
+              </div>
+            </div>
+          </div>
+         
+
+          <!-- Accordion's collapsable 1 -->
+          <div class="accordion-item">
+            <!-- Title -->
+            <h2 class="accordion-header" id="headingOne">
+              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="false" aria-controls="collapseOne">World state</button>
+            </h2>
+
+            <!-- Content -->
+            <div id="collapseOne" class="accordion-collapse collapse" aria-labelledby="headingOne" data-bs-parent="#accordionExample">
+              <div class="accordion-body">
+                <!-- <spam class="description"><strong>Detectable attacks:</strong><br/>- <u>Invalid data</u>: should not be in the blockchain, such as transactions that are not defined in the smart contract.
+                  <br/>- <u>Incoherent data</u>: are not the same for every member of the federation.</spam><br/><br/>
+                  <spam class="description"><strong> Mechanism: </strong>Here you can request specific blocks. You can use it to check general blockchain data, transactions hashes (including smart contract deployments, manually) and corresponding signatures.
+                    Every member of the federation should provide the same block.
+                    <p><small><br />Enter the desired block number below. Alternatively, use 'beginning' or 'end' ro retrieve the first and last blocks, respectively.</small></p>
+                  </spam> -->
+                <spam class="description">The world state is a snapshot of the blockchain that summarizes the contents of its blocks. In this application, it represents the balances of the wallets. In the event of an attack, for example, the world state can be used to fork the original blockchain from a point prior to the malicious event. Thus, if the federation misbehaves, the blockchain state can be recovered under a new federation with different members.</spam>
+                <div class="mt-3">
+                  <div id="ws"></div>
                 </div>
               </div>
             </div>
+          </div>
+
+          
 
         </div>
       </div>

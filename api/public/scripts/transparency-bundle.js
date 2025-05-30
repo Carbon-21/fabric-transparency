@@ -8301,7 +8301,7 @@ window.getIpnsContent = async function () {
       ipfsPublicationStatusDiv.innerHTML = `
         <div class="alert alert-success mt-3">
           ✅ Content retrieved from IPNS!<br>
-          <strong>CID:</strong> 
+          <strong>Content identifier (CID):</strong> 
             ${responseData.content}
           <button class="btn btn-sm btn-outline-secondary ms-2" 
                   onclick="navigator.clipboard.writeText('${responseData.content}')">
@@ -8480,7 +8480,7 @@ window.checkBlockchainAuto = async function () {
       method: "GET"
     });
     const firstTail = await responseData.json();
-    if (!firstTail) blocksDiv.innerHTML += `<br/>- There are no publications on IPFS. Consider publishing under the tab "IPFS"! ⚠️`;else {
+    if (!firstTail) blocksDiv.innerHTML += `<br/>- There are no publications on IPFS. Consider publishing under the tab "IPFS"! ⚠️<br/>Done.`;else {
       //get block number
       const match = firstTail.match(/"low":\s*(\d+)/);
       const blockNumber = parseInt(match[1]);
@@ -8697,7 +8697,7 @@ window.postTransparencyLog = async function () {
       ipfsPublicationStatusDiv.innerHTML = `
         <div class="alert alert-success mt-3">
           ✅ Transparency log successfully published!<br>
-          <strong>CID:</strong> 
+          <strong>Content Identifier (CID):</strong> 
             ${responseData.cid}
           <button class="btn btn-sm btn-outline-secondary ms-2" 
                   onclick="navigator.clipboard.writeText('${responseData.cid}')">
