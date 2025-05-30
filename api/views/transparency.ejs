@@ -11,10 +11,14 @@
     <section id="intro"><%- include("partials/navbar") %></section>
 
     <section id="features">
-      <div class="container-fluid mt-5">
+      <div class="container-fluid mt-4">
         <!-- Page Title -->
-        <h1 class="features-header">Transparency portal</h1>
-
+        <h1 class="features-header" style="margin-bottom: 40px;">Transparency portal</h1>
+        <spam class="description">
+        Given the enclosed nature of permissioned blockchains, systems that use them tend to offer limited transparency to external entities. 
+        This tool addresses the issue by providing mechanisms that enable auditing permissioned blockchains implemented with Hyperledger Fabric.
+      </spam>
+        <br><br/><br/>
         <h5>Automatic audit</h5>
         <div class="mt-1"><strong>Smart contract:</strong></div>
         <div id="autoCC"></div>
@@ -22,9 +26,9 @@
         <div class="mt-3"><strong>Blocks:</strong></div>
         <div id="autoBlocks"></div>
 
-        <h5 class="mt-4">Audit tools</h5>
-        In this section, each transparency feature is explained, alongside the federation attacks that they can detect. The available mechanisms can be used individually or in combination. It is possible to achieve the same results as the automatic audit above, but in a more granualar and detailed way, allowing for close inspection of the blockchain data.
-
+        <h5 class="mt-5">Audit tools</h5>
+        <spam class="description">In this section, each transparency feature is explained, alongside the federation attacks that they can detect. The available mechanisms can be used individually or in combination. It is possible to achieve the same results as the automatic audit above, but in a more granualar and detailed way, allowing for close inspection of the blockchain data.
+        </spam>
         <div class="accordion mt-3" id="accordionExample">
 
           <!-- Accordion's collapsable 5 -->
@@ -43,7 +47,7 @@
                 <spam class="description"><strong> Detectable attacks:</strong><br/>- <u>Alternative smart contract</u>: the federation deploys a smart contract that is not the one alleged.<br/>- <u>Backdoors that favour the federation</u>: can be identified by specialized monitors by reading and executing the open source smart contract.</spam><br/><br/>
                 <spam class="description"><strong> Mechanism:</strong> Here you can run the same test as in the automatic audit. Our smart contract is open source and available at
                   <a href="https://github.com/Carbon-21/fabric-transparency/blob/main/chaincode/chaincode.tgz">Github</a>. You may download it and upload it below. Your browser
-                  is going to hash it (SHA-256) and compare it to the latest smart contract allegedly deployed on the blockchain. To do so, the browser requests the blockchain 
+                  is going to hash it (SHA-256) and compare it to the latest smart contract allegedly deployed on the blockchain (see function <a href="scripts/transparency.js">calculateFileHash</a>). To do so, the browser requests the blockchain 
                   blocks and look for smart contract deployment hashes. Since every member of the federation provides such data, unless all of them spoof the deployment hash, this mechanism
                   guarantees that the code on Github is the one being used to define the business logic.</spam>
 
@@ -116,7 +120,7 @@
                 <spam class="description"><strong>Detectable attacks:</strong><br/>- <u>Discrete modification</u>: the federation silently modifies the content of the blockchain, without readjusting the hash chain.
                   <br/>- <u>Incoherent data</u>: are not the same for every member of the federation.</spam><br/><br/>
                   <spam class="description"><strong> Mechanism: </strong>Request a specific sequence of blocks from the network, each containing the hash of the previous block. Then, your browser calculates the 
-                    hashes of the received blocks and verify whether they match the hashes sent by the blockchain network. In the automatic audit process, this is done for all of the blocks.
+                    hashes of the received blocks and verify whether they match the hashes sent by the blockchain network (see function <a href="scripts/transparency.js">checkBlockchain</a>). In the automatic audit process, this is done for all of the blocks.
                     <p><small><br />Enter the desired block numbers below. Alternatively, use 'beginning' or 'end' ro retrieve the first and last blocks, respectively.</small></p>
                   </spam>
 
