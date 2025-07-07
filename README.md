@@ -47,7 +47,7 @@ A seguir são descritas as etapas necessárias para se executar a aplicação, s
 
 A forma mais fácil de usar esta ferramenta é através de uma máquina virtual:
 
-1. Baixe o VirtualBox[https://www.virtualbox.org/wiki/Downloads]
+1. Baixe o [VirtualBox](https://www.virtualbox.org/wiki/Downloads)
 2. Baixe a [imagem Debian](https://drive.google.com/file/d/1OcgcZKUsSEIYW5KWos6XiynpSzP4EttJ/view?usp=sharing) contendo a ferramenta
 3. Extraia os arquivos
 4. Clique no arquivo vbox. Isso deve carregar a máquina no VirtualBox
@@ -87,15 +87,79 @@ Após isso, ao abrir a interface web, os testes automáticos serão executados. 
 
 # Experimentos
 
+Esta seção descreve um passo a passo para a execução e obtenção dos resultados do artigo, apresentados na Seção 4, "Análise da ferramenta". O passo a passo é o mesmo executado no vídeo demonstrativo da ferramenta (https://drive.google.com/file/d/1R0STvbPl3kPC0T4u9xYVO_cgjlullgKw/edit) e, portanto, pode ser seguido a partir da descrição textual abaixo ou junto ao vídeo. Todas as reinvidicações/funcionalidades abaixo podem ser executadas no ambiente com ao menos 4Gb e 2vCPUs destinados à ferramenta. Todo o experimento deve ser feito diretamente no portal de transparência (interface web, acessível pelo no navegador, a partir do endereço http://localhost:4000). Os resultados esperados podem ser obtidos em frações de segundo após o uso das respectivas funcionalidades.
 
-Esta seção deve descrever um passo a passo para a execução e obtenção dos resultados do artigo. Permitindo que os revisores consigam alcançar as reivindicações apresentadas no artigo.
-Cada reivindicações deve ser apresentada em uma subseção, com detalhes de arquivos de configurações a serem alterados, comandos a serem executados, flags a serem utilizadas, tempo esperado de execução, expectativa de recursos a serem utilizados como 1GB RAM/Disk e resultado esperado.
+## Pré-requisito
+Para averiguar o funcionamento de algumas das funcionalidades abaixo, recomenda-se primeiro a criação de ao menos uma transação. Para isso, o sistema implementa uma mecanismo de criação de tokens.
 
-Caso o processo para a reprodução de todos os experimentos não seja possível em tempo viável. Os autores devem escolher as principais reivindicações apresentadas no artigo e apresentar o respectivo processo para reprodução.
+**Passo a passo:**
+1. Na barra superior, clicar em "Login"
+2. Criar um usuário, manter "Org 1" e clicar no botão azul escrito "Login". Caso o usuário já exista, a conta será acessada ao invés de criada.
+3. Na tela de "Mint" (emissão) emitir tokens para o usuário recém-criado (campo "receiver") ou para um outro usuário criado previamente. É possível atribuir qualquer identificador ao token ("Token ID") e emitir um número inteiro de tokens ("Amount").
 
-## Reivindicações #X
+**Resultado esperado:**
+Após clicar no botão "Mint" no fim do formulário, recebe-se a resposta "Succesful mint!". Na tela "Balance", é possível verificar o seu saldo para dado token, utilizando o mesmo "Token ID" da emissão.
 
-## Reivindicações #Y
+**IMPORTANTE:**
+O portal de transparência desempenha, dentre outras funções, o papel de tutorial da ferramenta. Sugere-se segui-lo, do topo ao fim, lendo cada bloco de texto. No, entanto caso ache mais conveniente, um passo-a-passo é descrito abaixo, conforme instruído no edital do Salão de Ferramentas.
+
+## Detecção de modificação discreta
+A ferramenta é capaz de detectar modificações discretas no conteúdo da blockchain, ou seja alterações no conteúdo de dado bloco sem que haja novo cálculo de seu hash (e o dos blocos seguintes).
+
+**Observação:**
+O mecanismo de recalcular o encadeamento de hashes é executado automaticamente ao se abrir ou recarregar a página web do portal de transparência. A frase "- The file hash matches the latest smart contract deployment hash, in block 2! ✅" no começo da interface indica que o cálculo bate com o esperado.
+
+**Passo a passo (execução manual):**
+Na aba "hash chain veritication" do portal de transparência, inserir as palavras chaves "beginning" e "end" no primeiro e segundo campo respectivamente. Isso fará com que todos os blocos desde o primeiro até o último sejam solicitados à rede blockchain (ou Federação). Em seguida, o navegador calculará os hashes de todos os blocos e verificará se esses valores batem com os alegados pela Federação
+
+**Resultado esperado:** mesagem "The block hashes match those sent by the blockchain network"
+
+
+
+
+## Detecção de cadeia alternativa e visão fragmentada
+- Cadeia alternativa: a federação modifica o conteúdo da blockchain e ajusta a cadeia de hash, passando assim no teste de integridade do mecanismo de "verificação da cadeia de hash" acima.
+- Visão fragmentada: dados diferentes são fornecidos a monitores diferentes.
+
+**Passo a passo:**
+1. Na aba "IPFS" do portal de transparência, clicar em "publish current blockchain state to IPFS". Isso fará com que parte do estado atual da blokchain passe a existir na rede IPFS (local, nessa implementação), e, portanto, possa ser armazenado por entidades que não são a Federação. Essa informação pode ser confrontada com a fornecida pela Federação no futuro. Assim, caso ela realize ataques de cadeia alternativa ou visão fragmentada, haverá discrepância entre os dados fornecidos por ela e os contidos no IPFS.
+2. É possível recuperar o conteúdo publicado no IPFS, a partir de seu identificador (CID - Content Identifier). Para isso, adicione-o ao campo CID e clique em "request". 
+3. Também é possível verificar que o CID da última publicação do IPFS está vinculada a um endereço fixo (IPNS - Interplanetary Name System). Para isso, clique no botão "retrieve IPNS content".
+
+
+- There are no publications on IPFS. Consider publishing under the tab "IPFS"! ⚠️
+
+**Resultado esperado:**
+Após a etapa 1, recarregue a página web. O mecanismo de auditoria automática irá comparar o hash do primeiro bloco adicionado ao IPFS com o hash do bloco retornado pela Federação. Somando isso ao mecanismo de reconstrução do encadeamento de hashes (também executado automaticamente), verifica-se que não houve ataques de cadeia alternativa e de visão fragmentada.
+
+## Tranparência de dados e detecção de transação inválida
+**Passo a passo:**
+Na aba "Blocks" do portal de transparência, requisitar um bloco a partir de sua posição no encadeamento. Caso tenha criado um token, existirão os blocos de 0 a 6. O conteúdo retornado corresponde ao metadados do bloco, as transações contidas nele e as assinaturas envolvidas nas transações (proponentes e nós envolvidos). Conforme explicado por [Kimura et al.](https://ieeexplore.ieee.org/document/10400478/), utilizando o mesmo contrato inteligente (código aberto) que a Federação, também é possível simular transações e verificar se não existem transações inválidas (i.e., não definidas no contrato inteligente).
+
+Também é possível solicitar o world state (i.e., resumo da blockchain) a partir da aba "world state", para obter-se informações às claras do dados da blockcain
+
+
+**Resultado esperado:**
+Transparência do conteúdo da blockchain
+
+## Detecção de contrato inteligente alternativo ou com código malicioso
+Ao implantar-se um contrato inteligente na rede blockchain, é gerada uma transação contendo o hash do programa na blockchain. 
+
+**Observação:**
+A verificação do contrato é feita de maneira automática ao entrar ou recarregar o portal de transparência. O código é recuperado do github e os blocos da blockchain são requisitado, a fim de verificar se o hash de ambos batem. Vide a mensagem " The file hash matches the latest smart contract deployment hash, in block 2! ✅" no início da interface.
+
+**Passo a passo (execução manual):**
+1. Na aba "Smart contract verification" do portal de transparência, acessar o código-fonte do contrato inteligente através do link di Github.
+2. Fazer download do arquivo "chaincode.tgz". Note que monitores experientes podem examinar o conteúdo do código em busca de trechos maliciosos que possam favorecer a Federação. Isso pode ser feito manualmente ou a partir de ferramentas de auditoria como o [Mythril](https://github.com/ConsenSysDiligence/mythril)
+3. Adicionar o arquivo no campo correspondente e clicar em "calculate hash". 
+
+**Resultado esperado:**
+Mensagem "
+The file hash matches the latest smart contract deployment hash, in block 2! ✅"
+
+
+## Fork da blockchain
+A partir dos world states contidos no IPFS é possível estabelecer-se um mecanismo de recuperação da blockchain. No caso de uma aplicação baseada em ativos digitais, como a implementada, o world state corresponde ao saldo das carteiras/usuários. Assim, caso seja detectado algum ataque por parte da Federação (a partir dos mecanismos descritos acima), seria possível a recuperação da blockchain a estados prévios a ataques realizados pela Federação. Para isso, um conjunto de entidades confiáveis poderiam formar uma rede blockchain e recriar os ativos constatados em um world state prévio ao ataque.
 
 # LICENSE
 
