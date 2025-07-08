@@ -11,7 +11,7 @@
 # Estrutura do README.md
 O README está dividido nas seguinte seções são:
 - [Selos considerados](#selos-considerados)
-- [Informações básica](#informações-básica)
+- [Informações básica](#informações-básicas)
 - [Dependências](#dependências)
 - [Preocupações com segurança](#preocupações-com-segurança)
 - [Instalação](#instalação)
