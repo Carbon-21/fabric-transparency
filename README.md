@@ -141,7 +141,7 @@ Após a etapa 1, recarregue a página web. Você deve ver a mensagem `The hash o
 
 ## Transparência de dados e detecção de transação inválida
 **Passo a passo:**
-Na aba "Blocks" do portal de transparência, solicite um bloco a partir de sua posição no encadeamento. Caso tenha emitido um token na tela Mint, existirão os blocos de 0 a 6. O conteúdo retornado corresponde aos metadados do bloco, às transações contidas nele e às assinaturas envolvidas nas transações (dos proponentes e nós envolvidos). Conforme explicado por [Kimura et al.](https://ieeexplore.ieee.org/document/10400478/), utilizando o mesmo contrato inteligente (código aberto) que a federação, é possível simular transações contidas nos blocos e verificar se os resultados são os mesmos ali contidos. Assim, seria possível verificar se não existem transações inválidas (i.e., não definidas no contrato inteligente).
+Na aba "Blocks" do portal de transparência, solicite um bloco a partir de sua posição no encadeamento. Caso tenha emitido um token na tela Mint, existirão os blocos de 0 a 6. O conteúdo retornado corresponde aos metadados do bloco, às transações contidas nele e às assinaturas envolvidas nas transações (dos proponentes e nós envolvidos). Conforme explicado por [Kimura et al.](https://ieeexplore.ieee.org/document/10400478/), utilizando o mesmo contrato inteligente (código aberto) que a federação, um monitor experiente poderia simular as transações contidas nos blocos e verificar se os resultados são os mesmos alegados ali. Deste modo, é possível verificar se não existem transações inválidas nos blocos (i.e., não definidas no contrato inteligente).
 
 Também é possível solicitar o world state (i.e., resumo da blockchain) a partir da aba "world state", para obter informações às claras sobre os dados contidos da blockchain.
 
@@ -149,18 +149,18 @@ Também é possível solicitar o world state (i.e., resumo da blockchain) a part
 Transparência do conteúdo da blockchain.
 
 ## Detecção de contrato inteligente alternativo ou com código malicioso
-Ao implantar-se um contrato inteligente na rede blockchain, é gerada uma transação contendo o hash do programa na blockchain.
+Ao implantar-se um contrato inteligente na rede Fabric, é gerada uma transação contendo o hash do programa. Esta informação é armazenada na blockchain.
 
 **Observação:**
-A verificação do contrato é feita de maneira automática ao entrar ou recarregar o portal de transparência. O código é recuperado do GitHub e os blocos da blockchain são requisitados, a fim de verificar se o hash de ambos bate. Vide a mensagem "The file hash matches the latest smart contract deployment hash, in block 2! ✅" no início da interface.
+A verificação do contrato é feita de maneira automática ao entrar ou recarregar o portal de transparência. O código é recuperado do GitHub e os blocos da blockchain são requisitados a fim de se procurar o hash do contrato em algum bloco. Caso o último hash de contrato na blockchain bata com o do código do GitHub, será exibida a mensagem `The file hash matches the latest smart contract deployment hash, in block x! ✅` no início da interface.
 
 **Passo a passo (execução manual):**
 1. Na aba "Smart contract verification" do portal de transparência, acessar o código-fonte do contrato inteligente através do link do GitHub.
-2. Fazer download do arquivo "chaincode.tgz". Note que monitores experientes podem examinar o conteúdo do código em busca de trechos maliciosos que possam favorecer a Federação. Isso pode ser feito manualmente ou a partir de ferramentas de auditoria como o [Mythril](https://github.com/ConsenSysDiligence/mythril)
+2. Fazer download do arquivo "chaincode.tgz". Note que monitores experientes podem examinar o conteúdo do código em busca de trechos maliciosos que possam favorecer a Federação. Isso pode ser feito manualmente ou a partir de ferramentas de auditoria como o [Mythril](https://github.com/ConsenSysDiligence/mythril).
 3. Adicionar o arquivo no campo correspondente e clicar em "calculate hash".
 
 **Resultado esperado:**
-Mensagem "The file hash matches the latest smart contract deployment hash, in block 2! ✅"
+Mensagem `The file hash matches the latest smart contract deployment hash, in block x! ✅`
 
 ## Fork da blockchain
 A partir dos world states contidos no IPFS, é possível estabelecer um mecanismo de recuperação da blockchain. No caso de uma aplicação baseada em ativos digitais, como a implementada, o world state corresponde ao saldo das carteiras/usuários. Assim, caso seja detectado algum ataque por parte da Federação (a partir dos mecanismos descritos acima), seria possível a recuperação da blockchain a estados prévios aos ataques realizados pela Federação. Para isso, um conjunto de entidades confiáveis poderia formar uma nova rede blockchain e recriar os ativos constatados em um world state anterior ao ataque.
