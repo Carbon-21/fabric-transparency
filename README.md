@@ -93,7 +93,7 @@ Após executar o comando `./init` descrito acima, duas mensagens no terminal ind
 - `SERVER STARTED [...] http://localhost:4000 [...]`: indica que a ferramenta de transparência está funcional através da interface web.
 
 Após isso, ao abrir a interface web, os testes automáticos serão executados. Os resultados deste processo devem aparecer no topo da página. As seguintes linhas indicam testes bem-sucedidos (conforme descrito na seção a seguir):
-- `The file hash matches the latest smart contract deployment hash, in block 2! ✅`
+- `The file hash matches the latest smart contract deployment hash, in block x! ✅`
 - `The block hashes match those sent by the blockchain network! ✅`
 
 # Experimentos
@@ -105,25 +105,25 @@ Para averiguar o funcionamento de algumas das funcionalidades abaixo, recomenda-
 
 **Passo a passo:**
 1. Na barra superior, clicar em "Login"
-2. Criar um usuário, manter "Org 1" e clicar no botão azul escrito "Login". Caso o usuário já exista, a conta será acessada ao invés de criada.
+2. Inserir um nome qualquer de usuário, manter "Org 1" e clicar no botão azul escrito "Login". Caso o usuário já exista, a conta será acessada ao invés de criada.
 3. Na tela de "Mint" (emissão), emitir tokens para o usuário recém-criado (campo "receiver") ou para outro usuário criado previamente. É possível atribuir qualquer identificador ao token ("Token ID") e emitir um número inteiro de tokens ("Amount").
 
 **Resultado esperado:**
 Após clicar no botão "Mint" no fim do formulário, recebe-se a resposta "Succesful mint!". Na tela "Balance", é possível verificar o seu saldo para o dado token, utilizando o mesmo "Token ID" da emissão.
 
 **IMPORTANTE:**
-O portal de transparência desempenha, dentre outras funções, o papel de tutorial da ferramenta. Sugere-se segui-lo, do topo ao fim, lendo cada bloco de texto. No entanto, caso ache mais conveniente, um passo a passo é descrito abaixo, conforme instruído no edital do Salão de Ferramentas.
+O portal de transparência desempenha, dentre outras funções, o papel de tutorial da ferramenta. Após a criação da transação, sugere-se seguir esse tutorial (aba "Transparency"), do topo ao fim, lendo cada bloco de texto. Todas as reinvindicações a seguir podem ser obtidas durante esse processo.
 
 ## Detecção de modificação discreta
-A ferramenta é capaz de detectar modificações discretas no conteúdo da blockchain, ou seja, alterações no conteúdo de um dado bloco sem que haja novo cálculo de seu hash (e o dos blocos seguintes).
+A ferramenta é capaz de detectar modificações discretas no conteúdo da blockchain, ou seja, quando há alterações no conteúdo de um dado bloco mas não há novo cálculo do hash do bloco (e dos blocos seguintes).
 
 **Observação:**
-O mecanismo de recalcular o encadeamento de hashes é executado automaticamente ao se abrir ou recarregar a página web do portal de transparência. A frase "- The file hash matches the latest smart contract deployment hash, in block 2! ✅" no começo da interface indica que o cálculo bate com o esperado.
+O mecanismo de recalcular o encadeamento de hashes é executado automaticamente ao se abrir ou recarregar a página web do portal de transparência. A frase `The block hashes match those sent by the blockchain network! ✅`, no começo da interface, indica que o encadeamento está correto.
 
 **Passo a passo (execução manual):**
-Na aba "hash chain verification" do portal de transparência, inserir as palavras-chave "beginning" e "end" no primeiro e segundo campo, respectivamente. Isso fará com que todos os blocos desde o primeiro até o último sejam solicitados à rede blockchain (ou Federação). Em seguida, o navegador calculará os hashes de todos os blocos e verificará se esses valores batem com os alegados pela Federação.
+Na aba "hash chain verification" do portal de transparência, inserir as palavras-chave "beginning" e "end" no primeiro e segundo campo, respectivamente. Isso fará com que todos os blocos desde o primeiro até o último sejam solicitados à rede blockchain (ou federação). Em seguida, o navegador calculará os hashes de todos os blocos e verificará se esses valores batem com os alegados pela federação.
 
-**Resultado esperado:** mensagem "The block hashes match those sent by the blockchain network"
+**Resultado esperado:** mensagem `The block hashes match those sent by the blockchain network`.
 
 ## Detecção de cadeia alternativa e visão fragmentada
 - Cadeia alternativa: a Federação modifica o conteúdo da blockchain e ajusta a cadeia de hash, passando assim no teste de integridade do mecanismo de "verificação da cadeia de hash" acima.
