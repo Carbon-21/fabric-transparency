@@ -26,7 +26,7 @@ A organização do repositório, incluindo a estrutura de diretórios e arquivos
 Todos os selos são considerados: Disponíveis, Funcionais, Sustentáveis e Reprodutíveis.
 
 # Informações básicas
-Para executar a ferramenta descrita no artigo e replicar os experimentos demonstrados no vídeo, será necessário rodar o código presente neste repositório. Com isso, será criada uma rede blockchain Hyperledger Fabric em containers Docker, e o portal de transparência, com suporte a IPFS, será disponibilizado em uma interface web. Mais detalhes sobre isso estão disponíveis na documentação...
+Para executar a ferramenta descrita no artigo e replicar os experimentos demonstrados no vídeo, será necessário utilizar o código presente neste repositório. A partir dele, será criada uma rede blockchain Hyperledger Fabric em um container Docker. Além disso, um portal de transparência, com suporte a IPFS, será disponibilizado em uma interface web. Mais detalhes sobre a implementadação estão disponíveis na [documentação do código-fonte](https://docs.google.com/document/d/1qNu7dyH4CqtpFIJE0e6E0PMbpb3nOMoT/edit)
 
 Recomenda-se o uso de uma máquina com ao menos 4Gb de memória e 2 CPUs. A maneira mais fácil de executar a ferramenta é através da máquina virtual (VM) disponibilizada EM... . Caso utilize a VM, recomenda-se que a máquina host tenha ao menos 8Gb de memória, 4 CPUs e 20Gb livres para armazenamento da imagem da VM (VirtualBox). As dependências de software estão descritas na seção a seguir.
 
