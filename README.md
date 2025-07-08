@@ -9,11 +9,20 @@
 [Documentação do código-fonte](https://docs.google.com/document/d/1qNu7dyH4CqtpFIJE0e6E0PMbpb3nOMoT/edit)
 
 # Estrutura do README.md
-
+O README está dividido nas seguinte seções são:
+- [Selos considerados](#Selos considerados)
+- [Selos considerados](#selos-considerados)
+- Informações básica
+- Dependências
+- Preocupações com segurança
+- Instalação
+- Teste mínimo
+- Experimentos
+- Licença
 Apresenta a estrutura do readme.md, descrevendo como o repositório está organizado.
 ...
 
-# Selos Considerados
+# Selos considerados
 
 Todos os selos são considerados: Disponíveis, Funcionais, Sustentáveis e Reprodutíveis.
 
