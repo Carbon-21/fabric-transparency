@@ -126,24 +126,24 @@ Na aba "hash chain verification" do portal de transparência, inserir as palavra
 **Resultado esperado:** mensagem `The block hashes match those sent by the blockchain network`.
 
 ## Detecção de cadeia alternativa e visão fragmentada
-- Cadeia alternativa: a Federação modifica o conteúdo da blockchain e ajusta a cadeia de hash, passando assim no teste de integridade do mecanismo de "verificação da cadeia de hash" acima.
-- Visão fragmentada: dados diferentes são fornecidos a monitores distintos.
+A ferramenta permite a detecção dos seguintes ataques:
+- **Cadeia alternativa**: a Federação modifica o conteúdo da blockchain e ajusta a cadeia de hashes, passando assim no teste de integridade do mecanismo de verificação da cadeia de hashes, acima.
+- **Visão fragmentada**: dados diferentes são fornecidos a monitores distintos.
 
 **Passo a passo:**
-1. Na aba "IPFS" do portal de transparência, clicar em "publish current blockchain state to IPFS". Isso fará com que parte do estado atual da blockchain passe a existir na rede IPFS (local, nesta implementação) e, portanto, possa ser armazenada por entidades que não são a Federação. Essa informação pode ser confrontada com a fornecida pela Federação no futuro. Assim, caso ela realize ataques de cadeia alternativa ou visão fragmentada, haverá discrepância entre os dados fornecidos por ela e os contidos no IPFS.
+1. Na aba "IPFS" do portal de transparência, clicar em "publish current blockchain state to IPFS". Isso fará com que parte do estado atual da blockchain passe a existir na rede IPFS (local, nesta implementação) e, portanto, possa ser armazenada por entidades que não são a federação. Essa informação pode ser confrontada com a fornecida pela federação no futuro. Assim, caso ela realize ataques de cadeia alternativa ou visão fragmentada, haverá discrepância entre os dados fornecidos por ela e os contidos no IPFS.
 2. É possível recuperar o conteúdo publicado no IPFS a partir de seu identificador (CID - Content Identifier). Para isso, adicione-o ao campo CID e clique em "request".
-3. Também é possível verificar que o CID da última publicação do IPFS está vinculado a um endereço fixo (IPNS - Interplanetary Name System). Para isso, clique no botão "retrieve IPNS content".
+3. Também é possível verificar que o CID da última publicação do IPFS está vinculado a um endereço fixo (IPNS - Interplanetary Name System). Isso permite um modelo publish/subscribe entre federação e monitores. Para averiguar o vínculo entre o último CID e o endereço IPNS, clique no botão "retrieve IPNS content".
 
-- There are no publications on IPFS. Consider publishing under the tab "IPFS"! ⚠️
 
 **Resultado esperado:**
-Após a etapa 1, recarregue a página web. O mecanismo de auditoria automática irá comparar o hash do primeiro bloco adicionado ao IPFS com o hash do bloco retornado pela Federação. Somando isso ao mecanismo de reconstrução do encadeamento de hashes (também executado automaticamente), verifica-se que não houve ataques de cadeia alternativa ou de visão fragmentada.
+Após a etapa 1, recarregue a página web. Você deve ver a mensagem `The hash of the first tail published on IPFS (block x) matches the hash of block x provided by the blockchain network!✅`. O mecanismo de auditoria automática irá comparar o hash do primeiro bloco adicionado ao IPFS com o hash do mesmo bloco quando retornado pela Federação. Somando isso ao mecanismo de reconstrução do encadeamento de hashes (também executado automaticamente), verifica-se que não houve ataques de cadeia alternativa ou de visão fragmentada. Isso ocorre pois cada bloco aponta para o hash do bloco anterior.
 
 ## Transparência de dados e detecção de transação inválida
 **Passo a passo:**
-Na aba "Blocks" do portal de transparência, requisitar um bloco a partir de sua posição no encadeamento. Caso tenha criado um token, existirão os blocos de 0 a 6. O conteúdo retornado corresponde aos metadados do bloco, às transações contidas nele e às assinaturas envolvidas nas transações (proponentes e nós envolvidos). Conforme explicado por [Kimura et al.](https://ieeexplore.ieee.org/document/10400478/), utilizando o mesmo contrato inteligente (código aberto) que a Federação, também é possível simular transações e verificar se não existem transações inválidas (i.e., não definidas no contrato inteligente).
+Na aba "Blocks" do portal de transparência, solicite um bloco a partir de sua posição no encadeamento. Caso tenha emitido um token na tela Mint, existirão os blocos de 0 a 6. O conteúdo retornado corresponde aos metadados do bloco, às transações contidas nele e às assinaturas envolvidas nas transações (dos proponentes e nós envolvidos). Conforme explicado por [Kimura et al.](https://ieeexplore.ieee.org/document/10400478/), utilizando o mesmo contrato inteligente (código aberto) que a federação, é possível simular transações contidas nos blocos e verificar se os resultados são os mesmos ali contidos. Assim, seria possível verificar se não existem transações inválidas (i.e., não definidas no contrato inteligente).
 
-Também é possível solicitar o world state (i.e., resumo da blockchain) a partir da aba "world state", para obter informações claras sobre os dados da blockchain.
+Também é possível solicitar o world state (i.e., resumo da blockchain) a partir da aba "world state", para obter informações às claras sobre os dados contidos da blockchain.
 
 **Resultado esperado:**
 Transparência do conteúdo da blockchain.
