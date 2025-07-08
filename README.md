@@ -68,7 +68,7 @@ A forma mais fácil de usar esta ferramenta é através de uma máquina virtual:
 
 ## Código-fonte
 
-Caso não deseje utilizar a VM, primeiro baixe as dependências (mencionadas na seção "[Dependências](#dependências)") em um ambiente Debian 12. Em seguida, baixe a ferramenta:
+Caso não deseje utilizar a VM, primeiro instale as dependências (mencionadas na seção "[Dependências](#dependências)") em um ambiente Debian 12. Em seguida, baixe a ferramenta:
 
 ```
 git clone https://github.com/Carbon-21/fabric-transparency.git
@@ -89,12 +89,12 @@ Você deverá ver uma mensagem indicando que a ferramenta está disponível em `
 # Teste mínimo
 
 Após executar o comando `./init` descrito acima, duas mensagens indicam o funcionamento da ferramenta:
-- "Blockchain up and running!": indica que a rede blockchain (rodando em container Docker) está funcional
-- "SERVER STARTED ... http://localhost:4000...": indica que a ferramenta de transparência está funcional através da interface web.
+- `Blockchain up and running!`: indica que a rede blockchain (rodando em container Docker) está funcional
+- `SERVER STARTED [...] http://localhost:4000 [...]`: indica que a ferramenta de transparência está funcional através da interface web.
 
 Após isso, ao abrir a interface web, os testes automáticos serão executados. As seguintes linhas indicam que o sistema está funcional:
-- The file hash matches the latest smart contract deployment hash, in block 2! ✅
-- The block hashes match those sent by the blockchain network! ✅
+- `The file hash matches the latest smart contract deployment hash, in block 2! ✅`
+- `The block hashes match those sent by the blockchain network! ✅`
 
 # Experimentos
 
