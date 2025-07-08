@@ -167,4 +167,4 @@ A partir dos world state contidos no IPFS, é possível estabelecer um mecanismo
 
 # LICENSE
 
-Este artefato possui licença GPL 3.0
+Este artefato possui licença Apache 2.0.
