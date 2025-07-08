@@ -88,17 +88,17 @@ Você deverá ver uma mensagem indicando que a ferramenta está disponível em `
 
 # Teste mínimo
 
-Após executar o comando `./init` descrito acima, duas mensagens indicam o funcionamento da ferramenta:
+Após executar o comando `./init` descrito acima, duas mensagens no terminal indicam o funcionamento da ferramenta:
 - `Blockchain up and running!`: indica que a rede blockchain (rodando em container Docker) está funcional
 - `SERVER STARTED [...] http://localhost:4000 [...]`: indica que a ferramenta de transparência está funcional através da interface web.
 
-Após isso, ao abrir a interface web, os testes automáticos serão executados. As seguintes linhas indicam que o sistema está funcional:
+Após isso, ao abrir a interface web, os testes automáticos serão executados. Os resultados deste processo devem aparecer no topo da página. As seguintes linhas indicam testes bem-sucedidos (conforme descrito na seção a seguir):
 - `The file hash matches the latest smart contract deployment hash, in block 2! ✅`
 - `The block hashes match those sent by the blockchain network! ✅`
 
 # Experimentos
 
-Esta seção descreve um passo a passo para a execução e obtenção dos resultados do artigo, apresentados na Seção 4, "Análise da ferramenta". O passo a passo é o mesmo executado no vídeo demonstrativo da ferramenta (https://drive.google.com/file/d/1R0STvbPl3kPC0T4u9xYVO_cgjlullgKw/edit) e, portanto, pode ser seguido a partir da descrição textual abaixo ou junto ao vídeo. Todas as reivindicações/funcionalidades abaixo podem ser executadas em um ambiente com ao menos 4Gb e 2vCPUs destinados à ferramenta. Todo o experimento deve ser feito diretamente no portal de transparência (interface web, acessível pelo navegador, a partir do endereço http://localhost:4000). Os resultados esperados podem ser obtidos em frações de segundo após o uso das respectivas funcionalidades.
+Esta seção descreve um passo a passo para a execução e obtenção dos resultados do artigo, apresentados na Seção 4, "Análise da ferramenta". O passo a passo é o mesmo executado no [vídeo demonstrativo da ferramenta](https://drive.google.com/file/d/1R0STvbPl3kPC0T4u9xYVO_cgjlullgKw/view?usp=drive_link) e, portanto, pode ser seguido a partir da descrição textual abaixo ou junto ao vídeo. Todas as reivindicações/funcionalidades podem ser executadas em um ambiente com ao menos 4Gb e 2vCPUs destinados à ferramenta. Todo o experimento ocorre diretamente no portal de transparência (interface web, acessível pelo navegador, a partir do endereço http://localhost:4000). Os resultados esperados são obtidos em no máximo 3 segundos após a invocação das respectivas funcionalidades.
 
 ## Pré-requisito
 Para averiguar o funcionamento de algumas das funcionalidades abaixo, recomenda-se primeiro a criação de ao menos uma transação. Para isso, o sistema implementa um mecanismo de criação de tokens.
