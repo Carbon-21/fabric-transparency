@@ -44,7 +44,7 @@ Os seguintes requisitos de software são necessários para executar esta ferrame
 - Python 3.11.2
 - Hyperledger Fabric 2.5.12
 
-O sistema operacional recomendado é o **Debian 12**.
+O sistema operacional recomendado é o **Debian 12**, utilizado durante o desenvolvimento da ferramenta.
 
 # Preocupações com segurança
 
@@ -68,7 +68,7 @@ A forma mais fácil de usar esta ferramenta é através de uma máquina virtual:
 
 ## Código-fonte
 
-Caso não deseje utilizar a VM, primeiro baixe as dependências mencionadas na seção "[Dependências](#dependências)", de preferência em um sistema Debian 12. Em seguida, baixe a ferramenta:
+Caso não deseje utilizar a VM, primeiro baixe as dependências mencionadas na seção "[Dependências](#dependências)", em ambiente Debian 12. Em seguida, baixe a ferramenta:
 
 ```
 git clone https://github.com/Carbon-21/fabric-transparency.git
