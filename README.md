@@ -127,7 +127,7 @@ Na aba "hash chain verification" do portal de transparência, inserir as palavra
 
 ## Detecção de cadeia alternativa e visão fragmentada
 A ferramenta permite a detecção dos seguintes ataques:
-- **Cadeia alternativa**: a Federação modifica o conteúdo da blockchain e ajusta a cadeia de hashes, passando assim no teste de integridade do mecanismo de verificação da cadeia de hashes, acima.
+- **Cadeia alternativa**: a federação modifica o conteúdo da blockchain e ajusta a cadeia de hashes, passando assim no teste de integridade do mecanismo de verificação da cadeia de hashes, acima.
 - **Visão fragmentada**: dados diferentes são fornecidos a monitores distintos.
 
 **Passo a passo:**
@@ -137,7 +137,7 @@ A ferramenta permite a detecção dos seguintes ataques:
 
 
 **Resultado esperado:**
-Após a etapa 1, recarregue a página web. Você deve ver a mensagem `The hash of the first tail published on IPFS (block x) matches the hash of block x provided by the blockchain network!✅`. O mecanismo de auditoria automática irá comparar o hash do primeiro bloco adicionado ao IPFS com o hash do mesmo bloco quando retornado pela Federação. Somando isso ao mecanismo de reconstrução do encadeamento de hashes (também executado automaticamente), verifica-se que não houve ataques de cadeia alternativa ou de visão fragmentada. Isso ocorre pois cada bloco aponta para o hash do bloco anterior.
+Após a etapa 1, recarregue a página web. Você deve ver a mensagem `The hash of the first tail published on IPFS (block x) matches the hash of block x provided by the blockchain network!✅`. O mecanismo de auditoria automática irá comparar o hash do primeiro bloco adicionado ao IPFS com o hash do mesmo bloco quando retornado pela federação. Somando isso ao mecanismo de reconstrução do encadeamento de hashes (também executado automaticamente), verifica-se que não houve ataques de cadeia alternativa ou de visão fragmentada. Isso ocorre pois cada bloco aponta para o hash do bloco anterior.
 
 ## Transparência de dados e detecção de transação inválida
 **Passo a passo:**
@@ -156,14 +156,14 @@ A verificação do contrato é feita de maneira automática ao entrar ou recarre
 
 **Passo a passo (execução manual):**
 1. Na aba "Smart contract verification" do portal de transparência, acessar o código-fonte do contrato inteligente através do link do GitHub.
-2. Fazer download do arquivo "chaincode.tgz". Note que monitores experientes podem examinar o conteúdo do código em busca de trechos maliciosos que possam favorecer a Federação. Isso pode ser feito manualmente ou a partir de ferramentas de auditoria como o [Mythril](https://github.com/ConsenSysDiligence/mythril).
+2. Fazer download do arquivo "chaincode.tgz". Note que monitores experientes podem examinar o conteúdo do código em busca de trechos maliciosos que possam favorecer a federação. Isso pode ser feito manualmente ou a partir de ferramentas de auditoria como o [Mythril](https://github.com/ConsenSysDiligence/mythril).
 3. Adicionar o arquivo no campo correspondente e clicar em "calculate hash".
 
 **Resultado esperado:**
 Mensagem `The file hash matches the latest smart contract deployment hash, in block x! ✅`
 
 ## Fork da blockchain
-A partir dos world states contidos no IPFS, é possível estabelecer um mecanismo de recuperação da blockchain. No caso de uma aplicação baseada em ativos digitais, como a implementada, o world state corresponde ao saldo das carteiras/usuários. Assim, caso seja detectado algum ataque por parte da Federação (a partir dos mecanismos descritos acima), seria possível a recuperação da blockchain a estados prévios aos ataques realizados pela Federação. Para isso, um conjunto de entidades confiáveis poderia formar uma nova rede blockchain e recriar os ativos constatados em um world state anterior ao ataque.
+A partir dos world state contidos no IPFS, é possível estabelecer um mecanismo de recuperação da blockchain. No caso de uma aplicação baseada em ativos digitais, como a implementada aqui, o world state corresponde ao saldo das carteiras/usuários. Assim, caso seja detectado algum ataque por parte da federação (a partir dos mecanismos descritos acima), seria possível a recuperação da blockchain a estados prévios ao ataque. Para isso, um conjunto de entidades confiáveis poderia formar uma nova rede blockchain e recriar os ativos constatados em um world state anterior ao ataque.
 
 # LICENSE
 
