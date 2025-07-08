@@ -68,7 +68,7 @@ A forma mais fácil de usar esta ferramenta é através de uma máquina virtual:
 
 ## Código-fonte
 
-Caso não deseje utilizar a VM, primeiro baixe as dependências mencionadas na seção "[Dependências](#dependências)", em ambiente Debian 12. Em seguida, baixe a ferramenta:
+Caso não deseje utilizar a VM, primeiro baixe as dependências (mencionadas na seção "[Dependências](#dependências)") em um ambiente Debian 12. Em seguida, baixe a ferramenta:
 
 ```
 git clone https://github.com/Carbon-21/fabric-transparency.git
