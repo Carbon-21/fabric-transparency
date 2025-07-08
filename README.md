@@ -6,7 +6,7 @@
 
 [Vídeo demonstrativo da ferramenta](https://drive.google.com/file/d/1R0STvbPl3kPC0T4u9xYVO_cgjlullgKw/view?usp=drive_link)
 
-[Documentação do código-fonte](...)
+[Documentação do código-fonte](https://drive.google.com/file/d/1W0zhkyQhqrDDFnWHjlTvOsQOuTU2Mx75/view?usp=sharing)
 
 # Estrutura do README.md
 O README está dividido nas seguintes seções:
@@ -19,14 +19,14 @@ O README está dividido nas seguintes seções:
 - [Experimentos](#experimentos)
 - [Licença](#license)
 
-A organização do repositório, incluindo a estrutura de diretórios e arquivos principais, está documentada [aqui](...).
+A organização do repositório, incluindo a estrutura de diretórios e arquivos principais, está documentada [aqui](https://drive.google.com/file/d/1W0zhkyQhqrDDFnWHjlTvOsQOuTU2Mx75/view?usp=sharing).
 
 # Selos considerados
 
 Todos os selos são considerados: Disponíveis, Funcionais, Sustentáveis e Reprodutíveis.
 
 # Informações básicas
-Para executar a ferramenta descrita no artigo e replicar os experimentos demonstrados no vídeo, é necessário utilizar o código presente neste repositório. A partir dele, é criada uma rede blockchain Hyperledger Fabric em um container Docker. Além disso, um portal de transparência, com suporte a IPFS, é disponibilizado em uma interface web. Mais detalhes sobre a implementadação estão disponíveis na [documentação do código-fonte](...).
+Para executar a ferramenta descrita no artigo e replicar os experimentos demonstrados no vídeo, é necessário utilizar o código presente neste repositório. A partir dele, é criada uma rede blockchain Hyperledger Fabric em um container Docker. Além disso, um portal de transparência, com suporte a IPFS, é disponibilizado em uma interface web. Mais detalhes sobre o ambiente de execução estão disponíveis na [documentação do código-fonte](https://drive.google.com/file/d/1W0zhkyQhqrDDFnWHjlTvOsQOuTU2Mx75/view?usp=sharing).
 
 Recomenda-se o uso de uma máquina com ao menos 4Gb de memória e 2 CPUs. A maneira mais fácil de executar a ferramenta é através da [máquina virtual](...) (VM). Caso utilize a VM, recomenda-se que a máquina host tenha ao menos 8Gb de memória e 4 CPUs. É necessário ao menos 22Gb livres para armazenamento da imagem da VM. As dependências de software estão descritas na seção a seguir.
 
