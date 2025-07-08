@@ -28,7 +28,7 @@ Todos os selos são considerados: Disponíveis, Funcionais, Sustentáveis e Repr
 # Informações básicas
 Para executar a ferramenta descrita no artigo e replicar os experimentos demonstrados no vídeo, é necessário utilizar o código presente neste repositório. A partir dele, é criada uma rede blockchain Hyperledger Fabric em um container Docker. Além disso, um portal de transparência, com suporte a IPFS, é disponibilizado em uma interface web. Mais detalhes sobre a implementadação estão disponíveis na [documentação do código-fonte](...).
 
-Recomenda-se o uso de uma máquina com ao menos 4Gb de memória e 2 CPUs. A maneira mais fácil de executar a ferramenta é através da (máquina virtual)[...] (VM). Caso utilize a VM, recomenda-se que a máquina host tenha ao menos 8Gb de memória e 4 CPUs. É necessário ao menos 22Gb livres para armazenamento da imagem da VM. As dependências de software estão descritas na seção a seguir.
+Recomenda-se o uso de uma máquina com ao menos 4Gb de memória e 2 CPUs. A maneira mais fácil de executar a ferramenta é através da [máquina virtual](...) (VM). Caso utilize a VM, recomenda-se que a máquina host tenha ao menos 8Gb de memória e 4 CPUs. É necessário ao menos 22Gb livres para armazenamento da imagem da VM. As dependências de software estão descritas na seção a seguir.
 
 # Dependências
 
@@ -58,17 +58,17 @@ A seguir, são descritas as etapas necessárias para se executar a aplicação, 
 
 A forma mais fácil de usar esta ferramenta é através de uma máquina virtual:
 
-1. Baixe o [VirtualBox](https://www.virtualbox.org/wiki/Downloads)
-2. Baixe a [imagem Debian](https://drive.google.com/file/d/1OcgcZKUsSEIYW5KWos6XiynpSzP4EttJ/view?usp=sharing) contendo a ferramenta
-3. Extraia os arquivos
-4. Clique no arquivo vbox. Isso deve carregar a máquina no VirtualBox
-5. Ajuste os recursos da máquina em "settings" -> "general" -> "system". Recomendamos ao menos 4Gb e 2vCPUs, ou metade dos recursos disponíveis, idealmente
+1. Baixe o [VirtualBox](https://www.virtualbox.org/wiki/Downloads).
+2. Baixe a [imagem Debian](...) contendo a ferramenta.
+3. Extraia os arquivos.
+4. Clique no arquivo vbox. Isso deve carregar a máquina no VirtualBox.
+5. Ajuste os recursos da máquina em "settings" -> "general" -> "system". Recomendamos ao menos 4Gb e 2vCPUs, ou metade dos recursos disponíveis, idealmente.
 
 **Importante**: a **senha** para usar a VM é **1234**
 
 ## Código-fonte
 
-Caso não deseje utilizar uma VM, primeiro baixe as dependências mencionadas na seção "dependências", de preferência em um sistema Debian 12. Em seguida, baixe a ferramenta:
+Caso não deseje utilizar a VM, primeiro baixe as dependências mencionadas na seção "[Dependências](#dependências)", de preferência em um sistema Debian 12. Em seguida, baixe a ferramenta:
 
 ```
 git clone https://github.com/Carbon-21/fabric-transparency.git
