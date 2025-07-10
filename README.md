@@ -59,12 +59,16 @@ A seguir, são descritas as etapas necessárias para se executar a aplicação, 
 A forma mais fácil de usar esta ferramenta é através de uma máquina virtual:
 
 1. Baixe o [VirtualBox](https://www.virtualbox.org/wiki/Downloads).
-2. Baixe a [imagem Debian](https://drive.google.com/file/d/1yVjlJvny266zkqXdOwOVPhqNZu6i6lvZ/view?usp=sharing) contendo a ferramenta.
-3. Extraia os arquivos.
+2. Baixe a [VM Debian](https://drive.google.com/file/d/1yVjlJvny266zkqXdOwOVPhqNZu6i6lvZ/view?usp=sharing) contendo a ferramenta.
+3. Extraia os arquivos de dentro do ZIP.
 4. Clique no arquivo vbox. Isso deve carregar a máquina no VirtualBox.
-5. Ajuste os recursos da máquina em "settings" -> "general" -> "system". Recomendamos ao menos 4Gb e 2vCPUs, ou metade dos recursos disponíveis, idealmente.
+5. No VirtualBox, com a VM "debian 12" selecionada, clique em "start".
+6. Após a inicialização da máquina, basta utilizar a ferramenta através da interface web que será apresentada.
 
-**Importante**: a **senha** para usar a VM é **1234**
+
+**Importante**: a **senha** do usuário dentro da VM é **1234**.
+
+**Importante 2**: caso encontre problemas de desempenho, desligue a VM: "file" -> "close" -> "power off the machine". Em seguida, no VirtualBox, verifique os recursos da máquina em "settings" -> "general" -> "system". Idealmente, o slider no campo "base memory" deve estar no limite da barra verde. O mesmo vale para o campo "processors" (na aba processor). Os recursos mínimos recomendados são 4Gb e 2 vCPU. Após o ajuste, inicie a VM novamente. Por fim, siga as instruções descritas na seção "[Como usar a ferramenta](#como-usar-a-ferramenta)" abaixo, para inicializar a blockchain e a ferramenta de transparência.
 
 ## Código-fonte
 
@@ -76,7 +80,7 @@ git clone https://github.com/Carbon-21/fabric-transparency.git
 
 ## Como usar a ferramenta
 
-Se estiver executando a VM, a blockchain e a ferramenta de transparência já devem estar ativas e funcionando. Caso não esteja utilizando a VM ou queira reinicializar a blockchain e a ferramenta, execute:
+Se estiver executando a VM, a blockchain e a ferramenta de transparência já estarão funcionais. Neste caso, ao acessar a VM, o usuário se depara com a interface da ferramenta, pronta para uso. Caso não esteja utilizando a VM ou queira reinicializar a blockchain e a ferramenta, execute:
 
 ```
 cd fabric-transparency OU cd ~/Documents/fabric-transparency (se estiver usando a VM)
@@ -92,9 +96,11 @@ Após executar o comando `./init` descrito acima, duas mensagens no terminal ind
 - `Blockchain up and running!`: indica que a rede blockchain (rodando em container Docker) está funcional
 - `SERVER STARTED [...] http://localhost:4000 [...]`: indica que a ferramenta de transparência está funcional através da interface web.
 
-Após isso, ao abrir a interface web, os testes automáticos serão executados. Os resultados deste processo devem aparecer no topo da página. As seguintes linhas indicam testes bem-sucedidos (conforme descrito na seção a seguir):
+Após isso, ao abrir a interface web, os testes automáticos serão executados. Os resultados deste processo devem aparecer no topo da página. As seguintes linhas indicam que os testes foram bem-sucedidos:
 - `The file hash matches the latest smart contract deployment hash, in block x! ✅`
 - `The block hashes match those sent by the blockchain network! ✅`
+
+Mais detalhes sobre os testes automáticos são descritos na seção a seguir.
 
 # Experimentos
 
