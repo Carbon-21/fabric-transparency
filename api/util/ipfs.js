@@ -218,10 +218,31 @@ exports.getFirstTailOnIPFS = async (helia) => {
   catch (error) {
     logger.error(error)
     return null;
+  }  
+}
+
+exports.getLastTailOnIPFS = async (helia) => {
+  let currentCid,tail
+
+  //get cid from current IPNS reference, if any
+  try {
+    currentCid = await helia.ipns.resolve(helia.ipnsKeyPair.publicKey);
+  } catch (error) {
+    // logger.error(error)
+    return null; 
   }
 
-  
-  
+  try{
+  //get firstCid field, inside the current puvlication
+    await recursiveCat(helia.unixfs, currentCid.cid.toString());
+    tail = catContent[4];
+
+    return tail;
+  }
+  catch (error) {
+    logger.error(error)
+    return null;
+  }  
 }
 
 //get content of a given cid

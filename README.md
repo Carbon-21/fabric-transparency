@@ -137,7 +137,14 @@ A ferramenta permite a detecção dos seguintes ataques:
 
 
 **Resultado esperado:**
-Após a etapa 1, recarregue a página web. Você deve ver a mensagem `The hash of the first tail published on IPFS (block x) matches the hash of block x provided by the blockchain network!✅`. O mecanismo de auditoria automática irá comparar o hash do primeiro bloco adicionado ao IPFS com o hash do mesmo bloco quando retornado pela federação. Somando isso ao mecanismo de reconstrução do encadeamento de hashes (também executado automaticamente), verifica-se que não houve ataques de cadeia alternativa ou de visão fragmentada. Isso ocorre pois cada bloco aponta para o hash do bloco anterior.
+
+Após a etapa 1, recarregue a página web. Você deve obter as seguintes mensagens:
+
+`The block hashes match those sent by the blockchain network! ✅`
+
+`The hash of the last tail published on IPFS (block #X) matches the hash of block #X provided by the blockchain network! ✅`
+
+ O mecanismo de auditoria automática compara o hash do último bloco X adicionado ao IPFS com o hash do mesmo bloco retornado pela federação. Somando isso ao mecanismo de reconstrução do encadeamento de hashes (também executado automaticamente), verifica-se que não houve ataques de cadeia alternativa ou de visão fragmentada até o último bloco X publicado no IPFS. A intuição por trás da combinação desses dois mecanismos é que o bloco X é fornecido, em um cenário ideal, por uma entidade que não é a Federação. Caso houvesse alteração no bloco X ou algum anterior, o encadeamento de hashes não se satisfaria.
 
 ## Transparência de dados e detecção de transação inválida
 **Passo a passo:**

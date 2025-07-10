@@ -8476,23 +8476,48 @@ window.checkBlockchainAuto = async function () {
     blocksMatch ? blocksDiv.innerHTML += `<br/>- The block hashes match those sent by the blockchain network! ✅` : blocksDiv.innerHTML += `<br/>- The block hashes do not match those sent by the blockchain network! ❌`;
 
     //get first tail on IPFS
-    const responseData = await fetch('/ipfs/getFirstTailOnIPFS', {
+    const responseData = await fetch('/ipfs/getLastTailOnIPFS', {
       method: "GET"
     });
-    const firstTail = await responseData.json();
-    if (!firstTail) blocksDiv.innerHTML += `<br/>- There are no publications on IPFS. Consider publishing under the tab "IPFS"! ⚠️<br/>Done.`;else {
+    const lastTail = await responseData.json();
+    if (!lastTail) blocksDiv.innerHTML += `<br/>- There are no publications on IPFS. Consider publishing under the tab "IPFS"! ⚠️<br/>Done.`;else {
       //get block number
-      const match = firstTail.match(/"low":\s*(\d+)/);
+      const match = lastTail.match(/"low":\s*(\d+)/);
       const blockNumber = parseInt(match[1]);
 
       //hash the block
-      const firstTailHeader = JSON.parse(firstTail).header;
-      let firstTailHash = calculateBlockHash(firstTailHeader);
+      const lastTailHeader = JSON.parse(lastTail).header;
+      let lastTailHash = calculateBlockHash(lastTailHeader);
 
       //compare IPFS block and blockchain block
       // let calculatedHash = calculateBlockHash(response.blocks[i].header);
-      firstTailHash === calculateBlockHash(response.blocks[blockNumber].header) ? blocksDiv.innerHTML += `<br/>- The hash of the first tail published on IPFS (block #${blockNumber}) matches the hash of block #${blockNumber} provided by the blockchain network! ✅<br/>Done.` : blocksDiv.innerHTML += `<br/>- The hash of the first tail published on IPFS (block #${blockNumber}) DOES NOT match the hash of block #${blockNumber} provided by the blockchain network! ❌<br/>Done.`;
+      lastTailHash === calculateBlockHash(response.blocks[blockNumber].header) ? blocksDiv.innerHTML += `<br/>- The hash of the last tail published on IPFS (block #${blockNumber}) matches the hash of block #${blockNumber} provided by the blockchain network! ✅<br/>Done.` : blocksDiv.innerHTML += `<br/>- The hash of the last tail published on IPFS (block #${blockNumber}) DOES NOT match the hash of block #${blockNumber} provided by the blockchain network! ❌<br/>Done.`;
     }
+
+    // OLD: eu estava verificando a primeira tail e não a  última
+    // //get first tail on IPFS
+    // const responseData = await fetch('/ipfs/getFirstTailOnIPFS', {
+    //   method: "GET"
+    // });
+    // const firstTail = await responseData.json();
+
+    // if (!firstTail) blocksDiv.innerHTML += `<br/>- There are no publications on IPFS. Consider publishing under the tab "IPFS"! ⚠️<br/>Done.`
+    // else{
+    //   //get block number
+    //   const match = firstTail.match(/"low":\s*(\d+)/);
+    //   const blockNumber = parseInt(match[1]);
+
+    //   //hash the block
+    //   const firstTailHeader = JSON.parse(firstTail).header;
+    //   let firstTailHash = calculateBlockHash(firstTailHeader);
+
+    //   //compare IPFS block and blockchain block
+    //   // let calculatedHash = calculateBlockHash(response.blocks[i].header);
+    //   firstTailHash === calculateBlockHash(response.blocks[blockNumber].header)
+    //   ? (blocksDiv.innerHTML += `<br/>- The hash of the first tail published on IPFS (block #${blockNumber}) matches the hash of block #${blockNumber} provided by the blockchain network! ✅<br/>Done.`)
+    //   : (blocksDiv.innerHTML += `<br/>- The hash of the first tail published on IPFS (block #${blockNumber}) DOES NOT match the hash of block #${blockNumber} provided by the blockchain network! ❌<br/>Done.`);
+
+    // }
 
     //requisition success message
     // document.getElementById("flash").innerHTML = successFlashMessage;

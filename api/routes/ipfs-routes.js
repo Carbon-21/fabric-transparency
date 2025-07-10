@@ -31,6 +31,10 @@ router.get(
   ipfsController.getFirstTailOnIPFS
 );
 
+router.get(
+  "/getLastTailOnIPFS",
+  ipfsController.getLastTailOnIPFS
+);
 
 
 module.exports = router;
