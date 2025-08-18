@@ -4,6 +4,8 @@
 	SPDX-License-Identifier: Apache-2.0
 */
 
+// For the chaincode/smart contract, refer to ./chaincode/contract.go
+
 package main
 
 import (

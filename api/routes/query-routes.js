@@ -1,3 +1,5 @@
+//define the API routes: what path should be used to execute a given function?
+
 const { Router } = require("express");
 const { body, query, param } = require("express-validator");
 
@@ -21,13 +23,21 @@ router.get(
 
 router.get(
   "/channels/:channel/chaincodes/:chaincode/getBlockchainTail",
-  [param("channel").trim().not().isEmpty().isString(), param("chaincode").trim().not().isEmpty().isString(), validateAll],
+  [
+    param("channel").trim().not().isEmpty().isString(),
+    param("chaincode").trim().not().isEmpty().isString(),
+    validateAll,
+  ],
   queryController.getBlockchainTail
 );
 
 router.get(
   "/channels/:channel/chaincodes/:chaincode/getWorldState",
-  [param("channel").trim().not().isEmpty().isString(), param("chaincode").trim().not().isEmpty().isString(), validateAll],
+  [
+    param("channel").trim().not().isEmpty().isString(),
+    param("chaincode").trim().not().isEmpty().isString(),
+    validateAll,
+  ],
   queryController.getWorldState
 );
 
@@ -58,7 +68,12 @@ router.use(checkAuth);
 
 router.get(
   "/channels/:channel/chaincodes/:chaincode/selfBalance",
-  [param("channel").trim().not().isEmpty().isString(), param("chaincode").trim().not().isEmpty().isString(), query("tokenId").trim().not().isEmpty().isString(), validateAll],
+  [
+    param("channel").trim().not().isEmpty().isString(),
+    param("chaincode").trim().not().isEmpty().isString(),
+    query("tokenId").trim().not().isEmpty().isString(),
+    validateAll,
+  ],
   queryController.selfBalance
 );
 

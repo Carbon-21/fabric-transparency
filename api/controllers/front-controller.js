@@ -1,3 +1,5 @@
+//since the applciation uses EJS, the frontend is provided by the API through the functions present in this file
+
 const axios = require("axios").default;
 
 exports.getLogin = (req, res, next) => {

@@ -7,6 +7,7 @@ class ErrorMessage {
   }
 }
 
+//create dic
 const notFound = new ErrorMessage("Content not found");
 const serverError = new ErrorMessage("Error. Please, try again");
 const unauthorized = new ErrorMessage(

@@ -1,3 +1,5 @@
+//define the API routes: what path should be used to execute a given function?
+
 const { Router } = require("express");
 const { query } = require("express-validator");
 const { validateAll } = require("../util/validation");
@@ -10,31 +12,18 @@ router.post("/postTransparencyLog", ipfsController.postTransparencyLog);
 
 router.get(
   "/getCidContent",
-  [
-    query("cid").trim().not().isEmpty().isString(),
-    validateAll,
-  ],
+  [query("cid").trim().not().isEmpty().isString(), validateAll],
   ipfsController.getCidContent
 );
 
 router.get(
   "/getIpnsContent",
-  [
-    query("ipnsAddress").trim().not().isEmpty().isString(),
-    validateAll,
-  ],
+  [query("ipnsAddress").trim().not().isEmpty().isString(), validateAll],
   ipfsController.getIpnsContent
 );
 
-router.get(
-  "/getFirstTailOnIPFS",
-  ipfsController.getFirstTailOnIPFS
-);
+router.get("/getFirstTailOnIPFS", ipfsController.getFirstTailOnIPFS);
 
-router.get(
-  "/getLastTailOnIPFS",
-  ipfsController.getLastTailOnIPFS
-);
-
+router.get("/getLastTailOnIPFS", ipfsController.getLastTailOnIPFS);
 
 module.exports = router;

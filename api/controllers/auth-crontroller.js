@@ -1,3 +1,5 @@
+//authentication controller (auth functions/logic)
+
 const helper = require("../util/helper");
 const logger = require("../util/logger");
 const auth = require("../util/auth");
@@ -6,6 +8,7 @@ var { Wallets } = require("fabric-network");
 const FabricCAServices = require("fabric-ca-client");
 
 //////////DIRECT API CALLS//////////
+//register a new user. Enroll in the CA if not yet, creating a wallet for them. Return a JWT
 exports.register = async (req, res, next) => {
   logger.trace("Entered register controller");
 
@@ -79,8 +82,7 @@ exports.createAdmin = async () => {
     // if (!(await enrollUserInCA(admin, "admin"))) return new HttpError(500);
 
     logger.info("Successfully enrolled admin and admin@admin.com");
-  }
-  else {
+  } else {
     logger.info("Admins already created, skipping creation...");
   }
 };

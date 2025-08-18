@@ -1,3 +1,5 @@
+//invoke controller. In Hyperledger Fabric, invoke actions are the ones that write something to the ledger. The functions in this file call invoke functions from the smart contract (chaincode)
+
 const logger = require("../util/logger");
 const HttpError = require("../util/http-error");
 const helper = require("../util/helper");

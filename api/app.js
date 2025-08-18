@@ -1,8 +1,10 @@
 "use strict";
 
+//this is the "main program"
+
 ///// REQUIRES /////
 //npm packages
-require ("dotenv").config();
+require("dotenv").config();
 const express = require("express");
 const session = require("express-session");
 const flash = require("connect-flash");
@@ -16,7 +18,10 @@ const logger = require("./util/logger");
 const cors = require("./middleware/cors");
 const error = require("./middleware/error");
 const { createAdmin } = require("./controllers/auth-crontroller");
-const { postTransparencyLog, createIpfsNode } = require("./controllers/ipfs-controller");
+const {
+  postTransparencyLog,
+  createIpfsNode,
+} = require("./controllers/ipfs-controller");
 
 //routes
 const authRoutes = require("./routes/auth-routes");
@@ -80,7 +85,10 @@ app.use((req, res, next) => {
 
 //home
 app.get("/", function (req, res) {
-  res.render("transparency", { title: "Home", cssPath: "css/transparency.css" });
+  res.render("transparency", {
+    title: "Home",
+    cssPath: "css/transparency.css",
+  });
 });
 
 ///// ROUTES /////
@@ -94,6 +102,7 @@ app.use(async (req, res, next) => {
   }
 });
 
+//define the API route/paths
 app.use("/ipfs", ipfsRoutes);
 app.use("/auth", authRoutes);
 app.use("/invoke", invokeRoutes);
@@ -117,13 +126,16 @@ app.use(error);
     const port = process.env.PORT;
     app.listen(port, host, () => {
       logger.info("****************** SERVER STARTED ************************");
-      logger.info("***************  http://%s:%s  ******************", host, port);
+      logger.info(
+        "***************  http://%s:%s  ******************",
+        host,
+        port
+      );
     });
 
     // Uncomment to enable transparency log cron job
     // const cronJob = require("cron").CronJob;
     // new cronJob(process.env.LOG_CRONTAB, () => postTransparencyLog(heliaInstance), null, true);
-
   } catch (err) {
     logger.fatal("Application initialization failed: ", err);
     process.exit(1);

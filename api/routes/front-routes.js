@@ -1,7 +1,8 @@
+//define the API routes: what path should be used to execute a given function?
+
 const { Router } = require("express");
 const frontController = require("../controllers/front-controller.js");
 const isLoggedIn = require("../middleware/is-logged-in");
-
 
 const router = Router();
 
@@ -21,6 +22,5 @@ router.get("/balance", isLoggedIn, frontController.getBalance);
 router.get("/mint", isLoggedIn, frontController.getMint);
 
 router.get("/logout", frontController.getLogout);
-
 
 module.exports = router;

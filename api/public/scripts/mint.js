@@ -1,3 +1,4 @@
+//mint tokens
 async function mint() {
   event.preventDefault();
 
@@ -31,8 +32,10 @@ async function mint() {
 
   init.body = JSON.stringify(body);
 
+  //access the mint function (API)
   let response = await fetch(url, init);
 
+  //display result
   if (response.ok) {
     response = await response.json();
     if (response.result != "success") {

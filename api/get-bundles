@@ -1,4 +1,7 @@
 #!/bin/bash
+
+#this script uses browserify to create frontend JS bundles containing the necessary node packages
+
 cd "$(dirname "$0")"
 #install node modules if they are not installed already
 echo "Installing node modules if they are not installed already"

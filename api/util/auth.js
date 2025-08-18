@@ -3,7 +3,8 @@ const logger = require("../util/logger");
 
 const { sign } = require("jsonwebtoken");
 
-exports.createJWT = (username, org, role="client",expiration = "7d") => {
+//access to the user dashboard is intermediated by a JWT token
+exports.createJWT = (username, org, role = "client", expiration = "7d") => {
   //.env
   const token = sign({ username, org, role }, process.env.JWT_KEY, {
     expiresIn: expiration,

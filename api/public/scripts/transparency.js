@@ -1,9 +1,5 @@
 let sha = require("js-sha256");
 let asnjs = require("asn1.js");
-// let cryptoBrowserify = require("crypto-browserify");
-// let buffer = require('buffer');
-// const fs = require("fs");
-// const path = require("path");
 
 // Flash messages that are displayed to the user in case of success or failure of the transaction execution
 const successFlashMessage =
@@ -27,9 +23,9 @@ const failureFlashMessage2 =
 //retrieve the content of a CID
 window.getCidContent = async function () {
   let cidNumber = cid.value;
-  
+
   const ipfsPublicationStatusDiv = document.getElementById("getCid");
-  ipfsPublicationStatusDiv.innerHTML = ''; 
+  ipfsPublicationStatusDiv.innerHTML = "";
 
   // Display loading indicator
   ipfsPublicationStatusDiv.innerHTML = `
@@ -38,11 +34,13 @@ window.getCidContent = async function () {
       <div class="spinner-border ms-2" role="status"></div>
     </div>`;
 
+  //access the getCidContent function (API)
   try {
     const response = await fetch(`/ipfs/getCidContent?cid=${cidNumber}`, {
-      method: "GET"
+      method: "GET",
     });
 
+    //await the result and display it
     const responseData = await response.json();
     if (response.ok && responseData.success) {
       // await verify(responseData);
@@ -51,27 +49,39 @@ window.getCidContent = async function () {
           ✅ Content retrieved from IPFS!<br>
           <details>
             <summary><strong>World State</strong></summary>
-            <pre><code class="content" id="blockJson">${responseData.content[5]}</code></pre>
+            <pre><code class="content" id="blockJson">${
+              responseData.content[5]
+            }</code></pre>
           </details>
           <details>
             <summary><strong>Tail</strong></summary>
-            <pre><code class="content" id="blockJson">${responseData.content[4]}</code></pre>
+            <pre><code class="content" id="blockJson">${
+              responseData.content[4]
+            }</code></pre>
           </details>
           <strong>First CID:</strong> 
             ${responseData.content[2] ? responseData.content[2] : "Self."}
           <br/><strong>Previous CID:</strong> 
-            ${responseData.content[3] ? responseData.content[3] : "None. This is the first IPFS publication."}
+            ${
+              responseData.content[3]
+                ? responseData.content[3]
+                : "None. This is the first IPFS publication."
+            }
           <details>
             <summary><strong>Digital certificate (X509)</strong></summary>
-            <pre><code class="content" id="blockJson">${responseData.content[1]}</code></pre>
+            <pre><code class="content" id="blockJson">${
+              responseData.content[1]
+            }</code></pre>
           </details>
           <details>
             <summary><strong>Signature</strong></summary>
-            <pre><code class="content" id="blockJson">${responseData.content[0]}</code></pre>
+            <pre><code class="content" id="blockJson">${
+              responseData.content[0]
+            }</code></pre>
           </details>
         </div>`;
     } else {
-      const errorMsg = responseData.message || 'Unknown error occurred';
+      const errorMsg = responseData.message || "Unknown error occurred";
       ipfsPublicationStatusDiv.innerHTML = `
         <div class="alert alert-danger mt-3">
           ❌ Error: ${errorMsg}
@@ -80,7 +90,7 @@ window.getCidContent = async function () {
   } catch (error) {
     ipfsPublicationStatusDiv.innerHTML = `
       <div class="alert alert-danger mt-3">
-        ❌ Network error: ${error.message || 'Could not connect to server'}
+        ❌ Network error: ${error.message || "Could not connect to server"}
       </div>`;
   }
 };
@@ -88,7 +98,10 @@ window.getCidContent = async function () {
 // NÃO FUNCIONA: crypto-browserify bugado
 //check if the signature on an IPFS publication is valid. This requires doing RSA(SHA256(WS+tail+prev_cid))
 async function verify(publication) {
-  const content = publication.content[2].concat(publication.content[3],publication.content[0]);
+  const content = publication.content[2].concat(
+    publication.content[3],
+    publication.content[0]
+  );
   const signature = publication.content[1];
   // const cert = `-----BEGIN CERTIFICATE-----
   // MIIFrzCCA5egAwIBAgIUbyF0bDoIEjcPAZ4izfVJnGe4xckwDQYJKoZIhvcNAQEL
@@ -123,7 +136,7 @@ async function verify(publication) {
   // lgq25gfvtlC52sjmdaRZx7Q8wR7KI57Fe9n6rOupglvdap4ikdT6dxiw4E6JeX/+
   // xXXP4/leAh6qMRnyAZPlhjc8Xg==
   // -----END CERTIFICATE-----`;
-  
+
   // (async () => {
   // const publicKey = await importRSAPublicKeyFromPEM(cert);
   // const valid = await verifySignature(publicKey, signature, content);
@@ -138,7 +151,7 @@ async function verify(publication) {
 
   verifier = crypto.createVerify("RSA-SHA256");
   verifier.update(data);
-  console.log("fs passouaa",publication.pubKey);
+  console.log("fs passouaa", publication.pubKey);
   result = verifier.verify(publication.pubKey, signature, "base64");
 
   console.log("Resultado da verificação de assinatura:", result); //true or false
@@ -154,8 +167,7 @@ async function verify(publication) {
   // let isVerified = crypto.verify("RSA-SHA256", data, publication.pubKey, signature);
   // console.log(`Is signature verified: ${isVerified}`);
 
-//////////////////////
-
+  //////////////////////
 
   // let headerAsn = asnjs.define("headerAsn", function () {
   //   this.seq().obj(this.key("Number").int(), this.key("PreviousHash").octstr(), this.key("DataHash").octstr());
@@ -178,7 +190,7 @@ async function verify(publication) {
 //retrieve the content of an IPNS address (linked cid)
 window.getIpnsContent = async function () {
   const ipfsPublicationStatusDiv = document.getElementById("ipnsGet");
-  ipfsPublicationStatusDiv.innerHTML = ''; 
+  ipfsPublicationStatusDiv.innerHTML = "";
 
   // Display loading indicator
   ipfsPublicationStatusDiv.innerHTML = `
@@ -188,12 +200,15 @@ window.getIpnsContent = async function () {
     </div>`;
 
   try {
-    const response = await fetch('/ipfs/getIpnsContent?ipnsAddress=bafzaajaiaejca3hgs6skjaabaoy722sqoiadxmvqqekrzdaeioxjnl67qigowi43', {
-      method: "GET"
-    });
+    const response = await fetch(
+      "/ipfs/getIpnsContent?ipnsAddress=bafzaajaiaejca3hgs6skjaabaoy722sqoiadxmvqqekrzdaeioxjnl67qigowi43",
+      {
+        method: "GET",
+      }
+    );
 
     const responseData = await response.json();
-    
+
     if (response.ok && responseData.success) {
       ipfsPublicationStatusDiv.innerHTML = `
         <div class="alert alert-success mt-3">
@@ -206,7 +221,7 @@ window.getIpnsContent = async function () {
           </button>
         </div>`;
     } else {
-      const errorMsg = responseData.message || 'Unknown error occurred';
+      const errorMsg = responseData.message || "Unknown error occurred";
       ipfsPublicationStatusDiv.innerHTML = `
         <div class="alert alert-danger mt-3">
           ❌ Error: ${errorMsg}
@@ -215,15 +230,14 @@ window.getIpnsContent = async function () {
   } catch (error) {
     ipfsPublicationStatusDiv.innerHTML = `
       <div class="alert alert-danger mt-3">
-        ❌ Network error: ${error.message || 'Could not connect to server'}
+        ❌ Network error: ${error.message || "Could not connect to server"}
       </div>`;
   }
-}
+};
 
 //retrieve a block
 window.getBlockByNumber = async function () {
   let block = blockNumber.value;
-  
 
   //make request to the backend
   //make request to the backend
@@ -244,9 +258,22 @@ window.getBlockByNumber = async function () {
     // blockPreviousHash.innerText = response.info.previousBlockHash;
 
     //timestamp to date
-    let timestamp = new Date(response.block.data.data[0].payload.header.channel_header.timestamp);
+    let timestamp = new Date(
+      response.block.data.data[0].payload.header.channel_header.timestamp
+    );
     timestamp = convertTZ(timestamp, "America/Sao_Paulo"); //convert to BR timezone
-    timestamp = timestamp.getDate() + "/" + (timestamp.getMonth() + 1) + "/" + timestamp.getFullYear() + " " + timestamp.getHours() + ":" + timestamp.getMinutes() + ":" + timestamp.getSeconds();
+    timestamp =
+      timestamp.getDate() +
+      "/" +
+      (timestamp.getMonth() + 1) +
+      "/" +
+      timestamp.getFullYear() +
+      " " +
+      timestamp.getHours() +
+      ":" +
+      timestamp.getMinutes() +
+      ":" +
+      timestamp.getSeconds();
     blockTimestamp.innerText = timestamp;
   } else {
     document.getElementById("flash").innerHTML = failureFlashMessage;
@@ -257,7 +284,6 @@ window.getBlockByNumber = async function () {
 //retrieve a block
 window.getBlockByNumber = async function () {
   let block = blockNumber.value;
-  
 
   //make request to the backend
   //make request to the backend
@@ -278,9 +304,22 @@ window.getBlockByNumber = async function () {
     // blockPreviousHash.innerText = response.info.previousBlockHash;
 
     //timestamp to date
-    let timestamp = new Date(response.block.data.data[0].payload.header.channel_header.timestamp);
+    let timestamp = new Date(
+      response.block.data.data[0].payload.header.channel_header.timestamp
+    );
     timestamp = convertTZ(timestamp, "America/Sao_Paulo"); //convert to BR timezone
-    timestamp = timestamp.getDate() + "/" + (timestamp.getMonth() + 1) + "/" + timestamp.getFullYear() + " " + timestamp.getHours() + ":" + timestamp.getMinutes() + ":" + timestamp.getSeconds();
+    timestamp =
+      timestamp.getDate() +
+      "/" +
+      (timestamp.getMonth() + 1) +
+      "/" +
+      timestamp.getFullYear() +
+      " " +
+      timestamp.getHours() +
+      ":" +
+      timestamp.getMinutes() +
+      ":" +
+      timestamp.getSeconds();
     blockTimestamp.innerText = timestamp;
   } else {
     document.getElementById("flash").innerHTML = failureFlashMessage;
@@ -308,9 +347,22 @@ window.getBlockchainTail = async function () {
     tailPreviousHash.innerText = response.info.previousBlockHash;
 
     //timestamp to date
-    let timestamp = new Date(response.tail.data.data[0].payload.header.channel_header.timestamp);
+    let timestamp = new Date(
+      response.tail.data.data[0].payload.header.channel_header.timestamp
+    );
     timestamp = convertTZ(timestamp, "America/Sao_Paulo"); //convert to BR timezone
-    timestamp = timestamp.getDate() + "/" + (timestamp.getMonth() + 1) + "/" + timestamp.getFullYear() + " " + timestamp.getHours() + ":" + timestamp.getMinutes() + ":" + timestamp.getSeconds();
+    timestamp =
+      timestamp.getDate() +
+      "/" +
+      (timestamp.getMonth() + 1) +
+      "/" +
+      timestamp.getFullYear() +
+      " " +
+      timestamp.getHours() +
+      ":" +
+      timestamp.getMinutes() +
+      ":" +
+      timestamp.getSeconds();
     tailTimestamp.innerText = timestamp;
   } else {
     document.getElementById("flash").innerHTML = failureFlashMessage;
@@ -360,19 +412,19 @@ window.getWorldState = async function () {
 //retrieve all blocks, hash them and check if the resulting hashes match the retrieved ones. also, hash the first block on IPFS and compare it to the one provided by the blockchain network.
 window.checkBlockchainAuto = async function () {
   let blocksDiv = document.getElementById("autoBlocks");
-  blocksDiv.innerHTML = '';
+  blocksDiv.innerHTML = "";
 
   //make request to the backend
   let url = `http://localhost:4000/query/channels/channel1/chaincodes/chaincode/getRangeOfBlocks?min=beginning&max=end`;
   var init = {
     method: "GET",
   };
-  
+
   let response = await fetch(url, init);
 
   if (response.ok) {
     response = await response.json();
-    blocksDiv.innerHTML += '- Retrieved all blocks from the blockchain...';
+    blocksDiv.innerHTML += "- Retrieved all blocks from the blockchain...";
 
     //hash every block and check if they correspond to the previousHash field in the following block
     let blocksMatch = true;
@@ -381,14 +433,15 @@ window.checkBlockchainAuto = async function () {
     for (let i = 0; i < numBlocks; i++) {
       //get hashes
       let calculatedHash = calculateBlockHash(response.blocks[i].header);
-      let nextBlockPreviousHash = Buffer.from(response.blocks[i + 1].header.previous_hash).toString("base64");
+      let nextBlockPreviousHash = Buffer.from(
+        response.blocks[i + 1].header.previous_hash
+      ).toString("base64");
 
       //uncomment if you want to test a non matching scenario
       // i === 1 ? (calculatedHash = "a1p4p41") : (calculatedHash = calculatedHash);
 
       //print if hashes match
       if (calculatedHash !== nextBlockPreviousHash) blocksMatch = false;
-     
     }
 
     //print final result
@@ -396,20 +449,19 @@ window.checkBlockchainAuto = async function () {
       ? (blocksDiv.innerHTML += `<br/>- The block hashes match those sent by the blockchain network! ✅`)
       : (blocksDiv.innerHTML += `<br/>- The block hashes do not match those sent by the blockchain network! ❌`);
 
-    
-
     //get first tail on IPFS
-    const responseData = await fetch('/ipfs/getLastTailOnIPFS', {
-      method: "GET"
+    const responseData = await fetch("/ipfs/getLastTailOnIPFS", {
+      method: "GET",
     });
     const lastTail = await responseData.json();
 
-    if (!lastTail) blocksDiv.innerHTML += `<br/>- There are no publications on IPFS. Consider publishing under the tab "IPFS"! ⚠️<br/>Done.`
-    else{
+    if (!lastTail)
+      blocksDiv.innerHTML += `<br/>- There are no publications on IPFS. Consider publishing under the tab "IPFS"! ⚠️<br/>Done.`;
+    else {
       //get block number
       const match = lastTail.match(/"low":\s*(\d+)/);
       const blockNumber = parseInt(match[1]);
-      
+
       //hash the block
       const lastTailHeader = JSON.parse(lastTail).header;
       let lastTailHash = calculateBlockHash(lastTailHeader);
@@ -417,9 +469,8 @@ window.checkBlockchainAuto = async function () {
       //compare IPFS block and blockchain block
       // let calculatedHash = calculateBlockHash(response.blocks[i].header);
       lastTailHash === calculateBlockHash(response.blocks[blockNumber].header)
-      ? (blocksDiv.innerHTML += `<br/>- The hash of the last tail published on IPFS (block #${blockNumber}) matches the hash of block #${blockNumber} provided by the blockchain network! ✅<br/>Done.`)
-      : (blocksDiv.innerHTML += `<br/>- The hash of the last tail published on IPFS (block #${blockNumber}) DOES NOT match the hash of block #${blockNumber} provided by the blockchain network! ❌<br/>Done.`);
-
+        ? (blocksDiv.innerHTML += `<br/>- The hash of the last tail published on IPFS (block #${blockNumber}) matches the hash of block #${blockNumber} provided by the blockchain network! ✅<br/>Done.`)
+        : (blocksDiv.innerHTML += `<br/>- The hash of the last tail published on IPFS (block #${blockNumber}) DOES NOT match the hash of block #${blockNumber} provided by the blockchain network! ❌<br/>Done.`);
     }
 
     // OLD: eu estava verificando a primeira tail e não a  última
@@ -434,7 +485,7 @@ window.checkBlockchainAuto = async function () {
     //   //get block number
     //   const match = firstTail.match(/"low":\s*(\d+)/);
     //   const blockNumber = parseInt(match[1]);
-      
+
     //   //hash the block
     //   const firstTailHeader = JSON.parse(firstTail).header;
     //   let firstTailHash = calculateBlockHash(firstTailHeader);
@@ -446,7 +497,6 @@ window.checkBlockchainAuto = async function () {
     //   : (blocksDiv.innerHTML += `<br/>- The hash of the first tail published on IPFS (block #${blockNumber}) DOES NOT match the hash of block #${blockNumber} provided by the blockchain network! ❌<br/>Done.`);
 
     // }
-    
 
     //requisition success message
     // document.getElementById("flash").innerHTML = successFlashMessage;
@@ -481,20 +531,30 @@ window.checkBlockchain = async function () {
     for (let i = 0; i < numBlocks; i++) {
       //get hashes
       let calculatedHash = calculateBlockHash(response.blocks[i].header);
-      let nextBlockPreviousHash = Buffer.from(response.blocks[i + 1].header.previous_hash).toString("base64");
+      let nextBlockPreviousHash = Buffer.from(
+        response.blocks[i + 1].header.previous_hash
+      ).toString("base64");
 
       //uncomment if you want to test a non matching scenario
       // i === 3 ? (calculatedHash = "a1p4p41") : (calculatedHash = calculatedHash);
 
       //print hashes
-      checkedBlocksHtml += `Block ${i + response.min}, hash calculated by your computer: ${calculatedHash}<br>`;
-      checkedBlocksHtml += `Block ${i + response.min + 1}, previous_hash: ${nextBlockPreviousHash}<br>`;
+      checkedBlocksHtml += `Block ${
+        i + response.min
+      }, hash calculated by your computer: ${calculatedHash}<br>`;
+      checkedBlocksHtml += `Block ${
+        i + response.min + 1
+      }, previous_hash: ${nextBlockPreviousHash}<br>`;
 
       //print if hashes match
       if (calculatedHash === nextBlockPreviousHash) {
-        checkedBlocksHtml += `<span style="color:green">Block ${i + response.min} OK</span><br><br>`;
+        checkedBlocksHtml += `<span style="color:green">Block ${
+          i + response.min
+        } OK</span><br><br>`;
       } else {
-        checkedBlocksHtml += `<span style="color:red ">Block ${i + response.min} not ok!</span><br><br>`;
+        checkedBlocksHtml += `<span style="color:red ">Block ${
+          i + response.min
+        } not ok!</span><br><br>`;
         blocksMatch = false;
       }
       blockchainChecking.innerHTML = checkedBlocksHtml;
@@ -502,8 +562,12 @@ window.checkBlockchain = async function () {
 
     //print final result
     blocksMatch
-      ? (blockchainChecking.innerHTML = `<span style="color:green">The block hashes match those sent by the blockchain network</span><br><br>` + blockchainChecking.innerHTML)
-      : (blockchainChecking.innerHTML = `<span style="color:red ">The block hashes do not match those sent by the blockchain network</span><br><br>` + blockchainChecking.innerHTML);
+      ? (blockchainChecking.innerHTML =
+          `<span style="color:green">The block hashes match those sent by the blockchain network</span><br><br>` +
+          blockchainChecking.innerHTML)
+      : (blockchainChecking.innerHTML =
+          `<span style="color:red ">The block hashes do not match those sent by the blockchain network</span><br><br>` +
+          blockchainChecking.innerHTML);
 
     //requisition success message
     document.getElementById("flash").innerHTML = successFlashMessage;
@@ -517,15 +581,14 @@ window.checkBlockchain = async function () {
 //check if chaincode deployed matches the one on github repository
 window.calculateFileHashAuto = async function () {
   const ccDiv = document.getElementById("autoCC");
-  ccDiv.innerHTML = '';
+  ccDiv.innerHTML = "";
   let match = false;
-  
-  
+
   try {
     //get smart contract from github
     const arrayBuffer = await downloadChaincode();
 
-    ccDiv.innerHTML += `- Smart contract retrieved from <a href="https://github.com/Carbon-21/fabric-transparency/blob/main/chaincode/chaincode.tgz">Github</a>...`
+    ccDiv.innerHTML += `- Smart contract retrieved from <a href="https://github.com/Carbon-21/fabric-transparency/blob/main/chaincode/chaincode.tgz">Github</a>...`;
 
     ///// GET BLOCKS WITH CHAINCODE DEPLOYMENT ////
     //make request to the backend
@@ -536,48 +599,47 @@ window.calculateFileHashAuto = async function () {
     let response = await fetch(url, init);
 
     if (response.ok) {
-      response = await response.json();  
-    } 
-    else {
+      response = await response.json();
+    } else {
       document.getElementById("flash").innerHTML = failureFlashMessage;
       console.log("HTTP Error ", response.status);
     }
 
-    
     // Hash then convert to hex string
-    const hashBuffer = await crypto.subtle.digest('SHA-256', arrayBuffer);
+    const hashBuffer = await crypto.subtle.digest("SHA-256", arrayBuffer);
     const hashArray = Array.from(new Uint8Array(hashBuffer));
-    const fileHash = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    const fileHash = hashArray
+      .map((b) => b.toString(16).padStart(2, "0"))
+      .join("");
 
     // Go through all chaincode deployments in the blockchain
     for (let i = 0; i < response.hashes.length; i++) {
-
       // A block may contain more than one chaincode deployment
       for (let j = 0; j < response.hashes[i].length; j++) {
-
         // Check if the file hash matches a deployment hash in the blockchain
         if (String(response.hashes[i][j]) == String(fileHash)) match = true;
         else match = false;
       }
 
-      if (!match) ccDiv.innerHTML += `<br/>- The file hash does not any smart contract deployment hash in the blockchain... ❌ `
-      else ccDiv.innerHTML += `<br/>- The file hash matches the latest smart contract deployment hash, in block ${response.indexes[i]}! ✅<br/>Done.`;
-
+      if (!match)
+        ccDiv.innerHTML += `<br/>- The file hash does not any smart contract deployment hash in the blockchain... ❌ `;
+      else
+        ccDiv.innerHTML += `<br/>- The file hash matches the latest smart contract deployment hash, in block ${response.indexes[i]}! ✅<br/>Done.`;
     }
   } catch (error) {
     console.log(error);
   }
-  
-}
+};
 
 //check if chaincode deployed matches the one uploaded
 window.calculateFileHash = async function () {
-  const hashResult = document.getElementById('hashResult');
-  const fileInput = document.getElementById('contractFile');
+  const hashResult = document.getElementById("hashResult");
+  const fileInput = document.getElementById("contractFile");
   let match = false;
 
   if (!fileInput.files || fileInput.files.length === 0) {
-    hashResult.innerHTML = '<div class="alert alert-warning">Please select a file first</div>';
+    hashResult.innerHTML =
+      '<div class="alert alert-warning">Please select a file first</div>';
     return;
   }
 
@@ -591,53 +653,60 @@ window.calculateFileHash = async function () {
     let response = await fetch(url, init);
 
     if (response.ok) {
-      response = await response.json();  
-    } 
-    else {
+      response = await response.json();
+    } else {
       document.getElementById("flash").innerHTML = failureFlashMessage;
       console.log("HTTP Error ", response.status);
     }
 
     ////// HASH FILE ///////
     // Display loading indicator
-    hashResult.innerHTML = '<div class="d-flex align-items-center"><strong>Calculating hash...</strong><div class="spinner-border ms-auto" role="status" aria-hidden="true"></div></div>';
-    let matchMessage = `The file hash does NOT match any smart contract deployment hash in the blockchain!`
-    let deploymentsMessage = ""
-    
+    hashResult.innerHTML =
+      '<div class="d-flex align-items-center"><strong>Calculating hash...</strong><div class="spinner-border ms-auto" role="status" aria-hidden="true"></div></div>';
+    let matchMessage = `The file hash does NOT match any smart contract deployment hash in the blockchain!`;
+    let deploymentsMessage = "";
+
     const file = fileInput.files[0];
-    console.log("file",file)
+    console.log("file", file);
     const arrayBuffer = await file.arrayBuffer();
-    console.log("arrayBuffer",arrayBuffer)
-    const hashBuffer = await crypto.subtle.digest('SHA-256', arrayBuffer);
+    console.log("arrayBuffer", arrayBuffer);
+    const hashBuffer = await crypto.subtle.digest("SHA-256", arrayBuffer);
 
     // Convert hash to hex string
     const hashArray = Array.from(new Uint8Array(hashBuffer));
-    const fileHash = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    const fileHash = hashArray
+      .map((b) => b.toString(16).padStart(2, "0"))
+      .join("");
 
     // Go through all chaincode deployments in the blockchain
     for (let i = 0; i < response.hashes.length; i++) {
-
       // Show block info and content
       deploymentsMessage += `
           <br><strong>Block: </strong>${response.indexes[i]}<br>
-          <strong>Hash value(s) of the chaincode(s) deployed in the block: </strong>${response.hashes[i]}<br>
+          <strong>Hash value(s) of the chaincode(s) deployed in the block: </strong>${
+            response.hashes[i]
+          }<br>
           <details>
               <summary><strong>JSON</strong></summary>
-              <pre><code class="content" id="tailJson">${JSON.stringify(response.blocks[i], null, 4)}</code></pre>
+              <pre><code class="content" id="tailJson">${JSON.stringify(
+                response.blocks[i],
+                null,
+                4
+              )}</code></pre>
           </details>
-          `
+          `;
 
       // A block may contain more than one chaincode deployment
       for (let j = 0; j < response.hashes[i].length; j++) {
-
         // Check if the file hash matches a deployment hash in the blockchain
         if (String(response.hashes[i][j]) == String(fileHash)) match = true;
         else match = false;
       }
 
-      if (!match) matchMessage = `<br/>The file hash does not any smart contract deployment hash in the blockchain... ❌ `
-      else matchMessage = `<br/>The file hash matches the latest smart contract deployment hash, in block ${response.indexes[i]}! ✅`;
-
+      if (!match)
+        matchMessage = `<br/>The file hash does not any smart contract deployment hash in the blockchain... ❌ `;
+      else
+        matchMessage = `<br/>The file hash matches the latest smart contract deployment hash, in block ${response.indexes[i]}! ✅`;
     }
 
     // Display results
@@ -648,7 +717,9 @@ window.calculateFileHash = async function () {
                 <strong>Size: </strong>${(file.size / 1024).toFixed(2)} KB<br>
                 <strong>SHA-256 Hash (hex): </strong><span class="limit">${fileHash}</span><br><br>
                 
-                ${(response.indexes.length)} smart contract deployment(s) detected in the blockchain:
+                ${
+                  response.indexes.length
+                } smart contract deployment(s) detected in the blockchain:
 
                 ${deploymentsMessage}
 
@@ -656,15 +727,17 @@ window.calculateFileHash = async function () {
 
     document.getElementById("flash").innerHTML = successFlashMessage;
   } catch (error) {
-    console.error('Error calculating hash:', error);
+    console.error("Error calculating hash:", error);
     hashResult.innerHTML = `<div class="alert alert-danger">Error calculating hash: ${error.message}</div>`;
     document.getElementById("flash").innerHTML = failureFlashMessage;
   }
 };
 
 window.postTransparencyLog = async function () {
-  const ipfsPublicationStatusDiv = document.getElementById("ipfsPublicationStatus");
-  ipfsPublicationStatusDiv.innerHTML = ''; 
+  const ipfsPublicationStatusDiv = document.getElementById(
+    "ipfsPublicationStatus"
+  );
+  ipfsPublicationStatusDiv.innerHTML = "";
 
   // Display loading indicator
   ipfsPublicationStatusDiv.innerHTML = `
@@ -674,12 +747,12 @@ window.postTransparencyLog = async function () {
     </div>`;
 
   try {
-    const response = await fetch('/ipfs/postTransparencyLog', {
-      method: "POST"
+    const response = await fetch("/ipfs/postTransparencyLog", {
+      method: "POST",
     });
 
     const responseData = await response.json();
-    
+
     if (response.ok && responseData.success) {
       ipfsPublicationStatusDiv.innerHTML = `
         <div class="alert alert-success mt-3">
@@ -693,21 +766,21 @@ window.postTransparencyLog = async function () {
         </div>`;
       // Create CID link to IPFS gateway
       // const cidLink = `https://ipfs.io/ipfs/${responseData.cid}`;
-      
+
       // ipfsPublicationStatusDiv.innerHTML = `
       //   <div class="alert alert-success mt-3">
       //     ✅ Transparency log successfully published!<br>
-      //     <strong>CID:</strong> 
+      //     <strong>CID:</strong>
       //     <a href="${cidLink}" target="_blank" class="text-break">
       //       ${responseData.cid}
       //     </a>
-      //     <button class="btn btn-sm btn-outline-secondary ms-2" 
+      //     <button class="btn btn-sm btn-outline-secondary ms-2"
       //             onclick="navigator.clipboard.writeText('${responseData.cid}')">
       //       Copy
       //     </button>
       //   </div>`;
     } else {
-      const errorMsg = responseData.message || 'Unknown error occurred';
+      const errorMsg = responseData.message || "Unknown error occurred";
       ipfsPublicationStatusDiv.innerHTML = `
         <div class="alert alert-danger mt-3">
           ❌ Failed to publish: ${errorMsg}
@@ -716,25 +789,32 @@ window.postTransparencyLog = async function () {
   } catch (error) {
     ipfsPublicationStatusDiv.innerHTML = `
       <div class="alert alert-danger mt-3">
-        ❌ Network error: ${error.message || 'Could not connect to server'}
+        ❌ Network error: ${error.message || "Could not connect to server"}
       </div>`;
   }
-  
+
   // Ensure accordion stays open after operation
   // const accordion = new bootstrap.Collapse(document.getElementById('collapseThree'), {
-    // show: true
+  // show: true
   // });
 };
 
-
 ///// AUX /////
 function convertTZ(date, tzString) {
-  return new Date((typeof date === "string" ? new Date(date) : date).toLocaleString("en-US", { timeZone: tzString }));
+  return new Date(
+    (typeof date === "string" ? new Date(date) : date).toLocaleString("en-US", {
+      timeZone: tzString,
+    })
+  );
 }
 
 var calculateBlockHash = function (header) {
   let headerAsn = asnjs.define("headerAsn", function () {
-    this.seq().obj(this.key("Number").int(), this.key("PreviousHash").octstr(), this.key("DataHash").octstr());
+    this.seq().obj(
+      this.key("Number").int(),
+      this.key("PreviousHash").octstr(),
+      this.key("DataHash").octstr()
+    );
   });
 
   let output = headerAsn.encode(
@@ -753,13 +833,15 @@ var calculateBlockHash = function (header) {
 
 async function downloadChaincode() {
   try {
-    const response = await fetch('https://raw.githubusercontent.com/Carbon-21/fabric-transparency/main/chaincode/chaincode.tgz')
+    const response = await fetch(
+      "https://raw.githubusercontent.com/Carbon-21/fabric-transparency/main/chaincode/chaincode.tgz"
+    );
 
     const arrayBuffer = await response.arrayBuffer();
     // const file = new Uint8Array(arrayBuffer); // this is the binary data
     return arrayBuffer;
   } catch (error) {
-    console.log(error)
+    console.log(error);
   }
 }
 //////////
@@ -767,10 +849,10 @@ async function importRSAPublicKeyFromPEM(pem) {
   console.log("a");
   // Remove header, footer, and line breaks
   const pemBody = pem
-    .replace(/-----BEGIN CERTIFICATE-----/, '')
-    .replace(/-----END CERTIFICATE-----/, '')
-    .replace(/\s+/g, '');
-    console.log("b");
+    .replace(/-----BEGIN CERTIFICATE-----/, "")
+    .replace(/-----END CERTIFICATE-----/, "")
+    .replace(/\s+/g, "");
+  console.log("b");
   const binaryDer = atob(pemBody);
   const binaryDerBuffer = new Uint8Array(binaryDer.length);
   console.log("c");
@@ -779,30 +861,30 @@ async function importRSAPublicKeyFromPEM(pem) {
   }
   console.log("d");
   // Import X.509 certificate and extract public key
-  const cert = await window.crypto.subtle.importCert
+  const cert = (await window.crypto.subtle.importCert)
     ? await window.crypto.subtle.importCert("x509", binaryDerBuffer.buffer)
     : await window.crypto.subtle.importKey(
         "spki",
         binaryDerBuffer.buffer,
         {
           name: "RSASSA-PKCS1-v1_5",
-          hash: "SHA-256"
+          hash: "SHA-256",
         },
         false,
         ["verify"]
       );
-      console.log("e");
+  console.log("e");
   return cert;
 }
 
 async function verifySignature(publicKey, signature, data) {
   const encoder = new TextEncoder();
   const dataBuffer = encoder.encode(data);
-  const sigBuffer = Uint8Array.from(atob(signature), c => c.charCodeAt(0));
+  const sigBuffer = Uint8Array.from(atob(signature), (c) => c.charCodeAt(0));
 
   const isValid = await crypto.subtle.verify(
     {
-      name: "RSASSA-PKCS1-v1_5"
+      name: "RSASSA-PKCS1-v1_5",
     },
     publicKey,
     sigBuffer,

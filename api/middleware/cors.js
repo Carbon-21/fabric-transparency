@@ -1,3 +1,5 @@
+//CORS (Cross-Origin Resource Sharing) setup
+
 module.exports = (req, res, next) => {
   //domains allowed to make requisitions to the backend
   res.setHeader("Access-Control-Allow-Origin", "*");

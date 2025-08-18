@@ -1,3 +1,5 @@
+//define the API routes: what path should be used to execute a given function?
+
 const { Router } = require("express");
 const { body } = require("express-validator");
 const { validateAll } = require("../util/validation");

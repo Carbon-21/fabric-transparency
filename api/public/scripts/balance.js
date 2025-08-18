@@ -1,3 +1,4 @@
+//get your balance for a given token
 async function selfBalance() {
   event.preventDefault();
 
@@ -12,11 +13,14 @@ async function selfBalance() {
     method: "GET",
     headers,
   };
+
+  //access the selfBalance function (API)
   let response = await fetch(url, init);
 
   if (response.ok) {
     response = await response.json();
 
+    //display balance
     if (response.result == null) alert("Sync error");
     else {
       balanceHeader.innerText = response.result + " token(s)";
@@ -34,6 +38,7 @@ async function selfBalance() {
   }
 }
 
+//OLD
 async function balance() {
   event.preventDefault();
 

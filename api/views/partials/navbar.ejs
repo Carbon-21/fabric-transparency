@@ -1,8 +1,8 @@
+<!-- define navbar (top nagivation bar) elements -->
+
 <nav class="navbar fixed-top navbar-expand-lg navbar-light bg-light">
   <div class="container-fluid">
-    <a class="navbar-brand" href="/">
-      Transparent Tokens
-    </a>
+    <a class="navbar-brand" href="/"> Transparent Tokens </a>
     <button
       class="navbar-toggler"
       type="button"
@@ -26,15 +26,17 @@
         <% } %>  -->
         <% if (currentUser) { %>
         <li class="nav-item">
-            <a class="nav-link" aria-current="page" href="/">Transparency</a>
+          <a class="nav-link" aria-current="page" href="/">Transparency</a>
         </li>
         <li class="nav-item">
-            <a class="nav-link" aria-current="page" href="/selfBalance">Balance</a>
+          <a class="nav-link" aria-current="page" href="/selfBalance"
+            >Balance</a
+          >
         </li>
         <li class="nav-item">
           <a class="nav-link" aria-current="page" href="/mint">Mint</a>
         </li>
-        
+
         <% } %> <% if (!currentUser) { %>
         <li class="nav-item">
           <a class="nav-link" href="/register"

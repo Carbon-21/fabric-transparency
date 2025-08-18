@@ -20,16 +20,18 @@ async function login() {
 
   body = {
     username,
-    org
+    org,
   };
 
   init.body = JSON.stringify(body);
 
+  //access the register function (API)
   let response = await fetch(url, init);
 
   if (response.ok) {
     response = await response.json();
     if (response.success) {
+      //locally store the JWT
       localStorage.setItem("token", response.token);
       localStorage.setItem("username", username);
       localStorage.setItem("org", org);

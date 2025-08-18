@@ -1,3 +1,5 @@
+//the system prioritizes this custom log structure instead of console.log
+
 // Log hierarchy:
 // logger.trace("Entering cheese testing");
 // logger.debug("Got cheese.");

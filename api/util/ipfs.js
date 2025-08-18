@@ -3,10 +3,10 @@ const fs = require("fs");
 const path = require("path");
 const crypto = require("crypto");
 
-let catContent = []
+let catContent = [];
 
+//create an IPFS node
 exports.createNode = async () => {
-
   try {
     const { noise } = await import("@chainsafe/libp2p-noise");
     const { yamux } = await import("@chainsafe/libp2p-yamux");
@@ -19,93 +19,87 @@ exports.createNode = async () => {
     const { identify } = await import("@libp2p/identify");
     const { unixfs } = await import("@helia/unixfs");
     const { ipns } = await import("@helia/ipns");
-    const {generateKeyPairFromSeed } = await import ('@libp2p/crypto/keys')
-    
+    const { generateKeyPairFromSeed } = await import("@libp2p/crypto/keys");
+
     ///// CREATE IPFS NODE ////
     // the blockstore is where we store the blocks that make up files
-    const blockstore = new MemoryBlockstore()
+    const blockstore = new MemoryBlockstore();
 
     // application-specific data lives in the datastore
-    const datastore = new MemoryDatastore()
+    const datastore = new MemoryDatastore();
 
     // libp2p is the networking layer that underpins Helia
     const libp2p = await createLibp2p({
       datastore,
       addresses: {
-        listen: [
-          '/ip4/127.0.0.1/tcp/0'
-        ]
+        listen: ["/ip4/127.0.0.1/tcp/0"],
       },
-      transports: [
-        tcp()
-      ],
-      connectionEncrypters: [
-        noise()
-      ],
-      streamMuxers: [
-        yamux()
-      ],
+      transports: [tcp()],
+      connectionEncrypters: [noise()],
+      streamMuxers: [yamux()],
       peerDiscovery: [
         bootstrap({
           list: [
-            '/dnsaddr/bootstrap.libp2p.io/p2p/QmNnooDu7bfjPFoTZYxMNLWUQJyrVwtbZg5gBMjTezGAJN',
-            '/dnsaddr/bootstrap.libp2p.io/p2p/QmQCU2EcMqAqQPR2i9bChDtGNJchTbq5TbXJJ16u19uLTa',
-            '/dnsaddr/bootstrap.libp2p.io/p2p/QmbLHAnMoJPWSCR5Zhtx6BHJX9KiKNN6tpvbUcqanj75Nb',
-            '/dnsaddr/bootstrap.libp2p.io/p2p/QmcZf59bWwK5XFi76CZX8cbJ4BhTzzA3gU1ZjYZcYW3dwt'
-          ]
-        })
+            "/dnsaddr/bootstrap.libp2p.io/p2p/QmNnooDu7bfjPFoTZYxMNLWUQJyrVwtbZg5gBMjTezGAJN",
+            "/dnsaddr/bootstrap.libp2p.io/p2p/QmQCU2EcMqAqQPR2i9bChDtGNJchTbq5TbXJJ16u19uLTa",
+            "/dnsaddr/bootstrap.libp2p.io/p2p/QmbLHAnMoJPWSCR5Zhtx6BHJX9KiKNN6tpvbUcqanj75Nb",
+            "/dnsaddr/bootstrap.libp2p.io/p2p/QmcZf59bWwK5XFi76CZX8cbJ4BhTzzA3gU1ZjYZcYW3dwt",
+          ],
+        }),
       ],
       services: {
-        identify: identify()
-      }
-    })
+        identify: identify(),
+      },
+    });
 
     const helia = await createHelia({
       datastore,
       blockstore,
-      libp2p
-    })
+      libp2p,
+    });
 
     //// CREATE IPNS OBJECT ////
-     //generate IPNS key pair from a fixed seed
-     const seed = new Uint8Array([
-      1, 2, 3, 4, 5, 6, 7, 8,
-      9, 10, 11, 12, 11, 14, 15, 16,
-      17, 18, 19, 20, 21, 22, 23, 24,
-      25, 26, 27, 28, 29, 30, 31, 32
+    //generate IPNS key pair from a fixed seed
+    const seed = new Uint8Array([
+      1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 11, 14, 15, 16, 17, 18, 19, 20, 21,
+      22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32,
     ]);
-    const ipnsKeyPair = await generateKeyPairFromSeed('Ed25519',seed)
+    const ipnsKeyPair = await generateKeyPairFromSeed("Ed25519", seed);
 
     //create IPNS object
-    const ipnsName = ipns(helia)
+    const ipnsName = ipns(helia);
 
     //// CREATE UNIXFS OBJECT ////
     const ipfsFs = unixfs(helia);
 
-    return {ipfs:helia, ipnsKeyPair:ipnsKeyPair, ipns:ipnsName, unixfs:ipfsFs}
+    return {
+      ipfs: helia,
+      ipnsKeyPair: ipnsKeyPair,
+      ipns: ipnsName,
+      unixfs: ipfsFs,
+    };
   } catch (error) {
-    logger.error(error)
+    logger.error(error);
   }
-}
+};
 
 //write world state + tails + previous cid to ipfs. then link to ipns
 exports.writeIPFS = async (tail, ws, helia) => {
   try {
-    let prevCid,firstCid
+    let prevCid, firstCid;
 
     //get cid from current IPNS reference, if any
     try {
-      prevCid = await helia.ipns.resolve(helia.ipnsKeyPair.publicKey)
-    } catch (error) {  
-    }
+      prevCid = await helia.ipns.resolve(helia.ipnsKeyPair.publicKey);
+    } catch (error) {}
 
     //get first cid
-    if (prevCid){
+    if (prevCid) {
       await recursiveCat(helia.unixfs, prevCid.cid.toString());
-      if (catContent[2]) firstCid=catContent[2];
+      if (catContent[2]) firstCid = catContent[2];
       else firstCid = prevCid.cid.toString();
     }
-    
+
     //get digital certificate
     const cert = fs.readFileSync(path.join(__dirname, "../keys/ipfs-cert.pem"));
 
@@ -129,7 +123,10 @@ exports.writeIPFS = async (tail, ws, helia) => {
 
     //cp first_cid_<timestamp>.txt . (arquivo é adicionado ao MFS)
     rootDirCid = await cp(helia.unixfs, rootDirCid, firstCidCid, fileName);
-    logger.debug(`Added ${fileName} to root dir. Updated directory cid:`, rootDirCid.toString());
+    logger.debug(
+      `Added ${fileName} to root dir. Updated directory cid:`,
+      rootDirCid.toString()
+    );
 
     //vim world_state_<timestamp>.txt (cria arquivo fora do MFS ainda)
     fileName = `world_state_${timestamp}.txt`;
@@ -138,7 +135,10 @@ exports.writeIPFS = async (tail, ws, helia) => {
 
     //cp world_state_<timestamp>.txt . (arquivo é adicionado ao MFS)
     rootDirCid = await cp(helia.unixfs, rootDirCid, wsCid, fileName);
-    logger.debug(`Added ${fileName} to root dir. Updated directory cid:`, rootDirCid.toString());
+    logger.debug(
+      `Added ${fileName} to root dir. Updated directory cid:`,
+      rootDirCid.toString()
+    );
 
     //vim tail_<timestamp>.txt (cria arquivo fora do MFS ainda)
     fileName = `tail_${timestamp}.txt`;
@@ -147,16 +147,24 @@ exports.writeIPFS = async (tail, ws, helia) => {
 
     //cp tail_<timestamp>.txt . (arquivo é adicionado ao MFS)
     rootDirCid = await cp(helia.unixfs, rootDirCid, tailCid, fileName);
-    logger.debug(`Added ${fileName} to root dir. Updated directory cid:`, rootDirCid.toString());
+    logger.debug(
+      `Added ${fileName} to root dir. Updated directory cid:`,
+      rootDirCid.toString()
+    );
 
     //vim prev_cid_<timestamp>.txt (cria arquivo fora do MFS ainda)
     fileName = `prev_cid_${timestamp}.txt`;
-    const prevCidCid = await helia.unixfs.addBytes(prevCid ? encoder.encode(prevCid.cid.toString()) : encoder.encode(prevCid));
+    const prevCidCid = await helia.unixfs.addBytes(
+      prevCid ? encoder.encode(prevCid.cid.toString()) : encoder.encode(prevCid)
+    );
     logger.debug(`Added file ${fileName} to IPFS:`, prevCidCid.toString());
 
     //cp prev_cid_<timestamp>.txt . (arquivo é adicionado ao MFS)
     rootDirCid = await cp(helia.unixfs, rootDirCid, prevCidCid, fileName);
-    logger.debug(`Added ${fileName} to root dir. Updated directory cid:`, rootDirCid.toString());
+    logger.debug(
+      `Added ${fileName} to root dir. Updated directory cid:`,
+      rootDirCid.toString()
+    );
 
     //vim cert_<timestamp>.txt (cria arquivo fora do MFS ainda)
     fileName = `cert_${timestamp}.txt`;
@@ -165,46 +173,59 @@ exports.writeIPFS = async (tail, ws, helia) => {
 
     //cp cert_<timestamp>.txt . (arquivo é adicionado ao MFS)
     rootDirCid = await cp(helia.unixfs, rootDirCid, certCid, fileName);
-    logger.debug(`Added ${fileName} to root dir. Updated directory cid:`, rootDirCid.toString());
+    logger.debug(
+      `Added ${fileName} to root dir. Updated directory cid:`,
+      rootDirCid.toString()
+    );
 
     //vim RSA_SHA256_ws__<timestamp>.txt (cria arquivo fora do MFS ainda)
     fileName = `RSA_SHA256_${timestamp}.txt`;
-    const signatureCid = await helia.unixfs.addBytes(encoder.encode(signedContent));
+    const signatureCid = await helia.unixfs.addBytes(
+      encoder.encode(signedContent)
+    );
     logger.debug(`Added file ${fileName} to IPFS:`, signatureCid.toString());
 
     //cp RSA_SHA256_<timestamp>.txt . (arquivo é adicionado ao MFS)
     rootDirCid = await cp(helia.unixfs, rootDirCid, signatureCid, fileName);
-    logger.debug(`Added ${fileName} to root dir. Updated directory cid:`, rootDirCid.toString());
-    logger.info("IPFS, resulting CID: ",rootDirCid.toString())
+    logger.debug(
+      `Added ${fileName} to root dir. Updated directory cid:`,
+      rootDirCid.toString()
+    );
+    logger.info("IPFS, resulting CID: ", rootDirCid.toString());
 
     /////// IPNS //////
     // publish to IPNS
-    await helia.ipns.publish(helia.ipnsKeyPair, rootDirCid)
-    logger.info("CID linked to IPNS. IPNS:", helia.ipnsKeyPair.publicKey.toCID(),helia.ipnsKeyPair.publicKey.toString())
+    await helia.ipns.publish(helia.ipnsKeyPair, rootDirCid);
+    logger.info(
+      "CID linked to IPNS. IPNS:",
+      helia.ipnsKeyPair.publicKey.toCID(),
+      helia.ipnsKeyPair.publicKey.toString()
+    );
 
     // test: resolve the name
-    const result = await helia.ipns.resolve(helia.ipnsKeyPair.publicKey)
-    logger.info("Retrieved from IPNS: ", result.cid, result.path)
+    const result = await helia.ipns.resolve(helia.ipnsKeyPair.publicKey);
+    logger.info("Retrieved from IPNS: ", result.cid, result.path);
 
     return rootDirCid;
   } catch (error) {
-    logger.error(error)
+    logger.error(error);
   }
 };
 
+//return the first tail registered on IPFS
 exports.getFirstTailOnIPFS = async (helia) => {
-  let currentCid,firstCid
+  let currentCid, firstCid;
 
   //get cid from current IPNS reference, if any
   try {
     currentCid = await helia.ipns.resolve(helia.ipnsKeyPair.publicKey);
   } catch (error) {
     // logger.error(error)
-    return null; 
+    return null;
   }
 
-  try{
-  //get firstCid field, inside the current puvlication
+  try {
+    //get firstCid field, inside the current puvlication
     await recursiveCat(helia.unixfs, currentCid.cid.toString());
     if (catContent[2]) firstCid = catContent[2];
     else firstCid = currentCid.cid.toString();
@@ -214,36 +235,35 @@ exports.getFirstTailOnIPFS = async (helia) => {
     const firstTail = catContent[4];
 
     return firstTail;
-  }
-  catch (error) {
-    logger.error(error)
+  } catch (error) {
+    logger.error(error);
     return null;
-  }  
-}
+  }
+};
 
+//return the last tail registered on IPFS
 exports.getLastTailOnIPFS = async (helia) => {
-  let currentCid,tail
+  let currentCid, tail;
 
   //get cid from current IPNS reference, if any
   try {
     currentCid = await helia.ipns.resolve(helia.ipnsKeyPair.publicKey);
   } catch (error) {
     // logger.error(error)
-    return null; 
+    return null;
   }
 
-  try{
-  //get firstCid field, inside the current puvlication
+  try {
+    //get firstCid field, inside the current puvlication
     await recursiveCat(helia.unixfs, currentCid.cid.toString());
     tail = catContent[4];
 
     return tail;
-  }
-  catch (error) {
-    logger.error(error)
+  } catch (error) {
+    logger.error(error);
     return null;
-  }  
-}
+  }
+};
 
 //get content of a given cid
 exports.getCidContent = async (cid, helia) => {
@@ -258,24 +278,21 @@ exports.getCidContent = async (cid, helia) => {
     const cert = fs.readFileSync(path.join(__dirname, "../keys/ipfs-cert.pem"));
     const pubKey = crypto.createPublicKey(cert);
 
-
-    return {catContent,pubKey};
-    
+    return { catContent, pubKey };
   } catch (error) {
-    logger.error(error)
+    logger.error(error);
   }
 };
 
 //get cid linked to the ipns address
 exports.getIpnsContent = async (ipnsAddress, helia) => {
-  try {   
-    const result = await helia.ipns.resolve(helia.ipnsKeyPair.publicKey)
-    logger.info("Retrieved from IPNS: ", result.cid.toString())
+  try {
+    const result = await helia.ipns.resolve(helia.ipnsKeyPair.publicKey);
+    logger.info("Retrieved from IPNS: ", result.cid.toString());
 
-    return result.cid.toString()
-
+    return result.cid.toString();
   } catch (error) {
-    logger.error(error)
+    logger.error(error);
   }
 };
 
@@ -283,11 +300,13 @@ exports.getIpnsContent = async (ipnsAddress, helia) => {
 //concat transparent log content (bc tail + ws). Then, sing and return it
 const signContent = (tail, ws, firstCid, prevCid, cert) => {
   //concat
-  const concat = tail.concat(ws,firstCid,prevCid,cert);
+  const concat = tail.concat(ws, firstCid, prevCid, cert);
   // console.log(concat)
 
   //get RSA private key
-  const ipfsPrivateKey = fs.readFileSync(path.join(__dirname, "../keys/ipfs-key.pem"));
+  const ipfsPrivateKey = fs.readFileSync(
+    path.join(__dirname, "../keys/ipfs-key.pem")
+  );
   const privateKey = crypto.createPrivateKey({
     key: ipfsPrivateKey,
     format: "pem",
@@ -295,7 +314,6 @@ const signContent = (tail, ws, firstCid, prevCid, cert) => {
     // 'cipher': 'rsa',
     passphrase: process.env.IPFS_SECRET_KEY,
   });
-
 
   //sign
   let signer = crypto.createSign("RSA-SHA256");
@@ -338,7 +356,7 @@ const cat = async (fs, fileCid) => {
 
 //cat everything from a dir
 const recursiveCat = async (fs, dirCid) => {
-  catContent = []
+  catContent = [];
   for await (const entry of fs.ls(dirCid)) {
     await cat(fs, entry.cid);
   }
@@ -359,8 +377,6 @@ const ipnsPublish = async (cid, peerId, ipnsConfig) => {
   }
 };
 
-
-
 //TODO
 //get cid from IPNS (if it exists), otherwise create an MFS root dir and return its seed
 const getRootCid = async (ipnsConfig, peerId) => {
@@ -369,11 +385,6 @@ const getRootCid = async (ipnsConfig, peerId) => {
   console.log("resolvedCid", resolvedCid);
   //...
 };
-
-
-
-
-
 
 //// MFS Functions ////
 const ls = async (fs, dirCid) => {
@@ -406,8 +417,6 @@ const mkdir = async (fs, dirName, pathCid) => {
 
   return emptyDirCid;
 };
-
-
 
 ///////////HELIA: alternativas pro writeIPFS (experimentos com diretórios falharam)///////////////
 

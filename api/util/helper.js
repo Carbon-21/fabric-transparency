@@ -1,3 +1,5 @@
+// auxiliary blockchain functions
+
 "use strict";
 
 const logger = require("./logger");
@@ -50,6 +52,7 @@ const getChaincode = async (org, channel, chaincodeName, username, next) => {
   }
 };
 
+// use the chaincode to get an account ID
 const getAccountIdFromChaincode = async (chaincode, next) => {
   try {
     let result = await chaincode.submitTransaction(
@@ -66,6 +69,7 @@ const getAccountIdFromChaincode = async (chaincode, next) => {
   }
 };
 
+// use the connection profile (CCP) to get an account ID
 const getAccountId = async (
   channelName,
   chaincodeName,
@@ -119,6 +123,7 @@ const getAccountId = async (
   }
 };
 
+//get the connection profile locally
 const getCCP = async (org) => {
   let ccpPath = path.resolve(
     __dirname,
@@ -132,6 +137,7 @@ const getCCP = async (org) => {
   return ccp;
 };
 
+//get the certificate authority's address
 const getCaUrl = async (org, ccp) => {
   let caURL =
     ccp.certificateAuthorities[
@@ -140,6 +146,7 @@ const getCaUrl = async (org, ccp) => {
   return caURL;
 };
 
+//get the local path to the wallet
 const getWalletPath = async (org) => {
   let walletPath = path.resolve(__dirname, "../..", "wallets", org);
   return walletPath;
@@ -197,6 +204,7 @@ const getRegisteredUserFromCA = async (username, org) => {
   }
 };
 
+//return user's identity
 const getRegisteredUser = async (username, userOrg, isJson) => {
   let ccp = await getCCP(userOrg);
 
@@ -272,6 +280,7 @@ const getRegisteredUser = async (username, userOrg, isJson) => {
   return response;
 };
 
+//check if the user is already registered
 const isUserRegistered = async (username, userOrg) => {
   const walletPath = await getWalletPath(userOrg);
   const wallet = await Wallets.newFileSystemWallet(walletPath);
@@ -292,11 +301,13 @@ const getCaInfo = async (org, ccp) => {
   return caInfo;
 };
 
+//MSP: membership service provider
 const getOrgMSP = (org) => {
   let orgMSP = org + "MSP";
   return orgMSP;
 };
 
+//create an admin wallet
 const enrollAdmin = async (org, ccp) => {
   console.log("calling enroll Admin method");
   try {
