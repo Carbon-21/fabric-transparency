@@ -31,7 +31,7 @@ Todos os selos são considerados: Disponíveis, Funcionais, Sustentáveis e Repr
 
 Para executar a ferramenta descrita no artigo e replicar os experimentos demonstrados no vídeo, é necessário utilizar o código presente neste repositório. A partir dele, é criada uma rede blockchain Hyperledger Fabric em um container Docker. Além disso, um portal de transparência, com suporte a IPFS, é disponibilizado em uma interface web. Mais detalhes sobre o ambiente de execução estão disponíveis na [documentação do código-fonte](https://drive.google.com/file/d/1W0zhkyQhqrDDFnWHjlTvOsQOuTU2Mx75/view?usp=sharing).
 
-Recomenda-se o uso de uma máquina com ao menos 4Gb de memória e 2 CPUs. A maneira mais fácil de executar a ferramenta é através da [máquina virtual](https://drive.google.com/file/d/1yVjlJvny266zkqXdOwOVPhqNZu6i6lvZ/view?usp=sharing) (VM). Caso utilize a VM, recomenda-se que a máquina host tenha ao menos 8Gb de memória e 4 CPUs. É necessário ao menos 23Gb livres para armazenamento da imagem da VM. As dependências de software estão descritas na seção a seguir.
+Recomenda-se o uso de uma máquina com ao menos 4Gb de memória e 2 CPUs. A maneira mais fácil de executar a ferramenta é através da [máquina virtual](https://drive.google.com/file/d/1es5qI6XZcK76Qr6ooMuovnmG5jgh5v-f/view?usp=sharing) (VM). Caso utilize a VM, recomenda-se que a máquina host tenha ao menos 8Gb de memória e 4 CPUs. É necessário ao menos 23Gb livres para armazenamento da imagem da VM. As dependências de software estão descritas na seção a seguir.
 
 # Dependências
 
@@ -62,7 +62,7 @@ A seguir, são descritas as etapas necessárias para se executar a aplicação, 
 A forma mais fácil de usar esta ferramenta é através de uma máquina virtual:
 
 1. Baixe o [VirtualBox](https://www.virtualbox.org/wiki/Downloads).
-2. Baixe a [VM Debian](https://drive.google.com/file/d/1yVjlJvny266zkqXdOwOVPhqNZu6i6lvZ/view?usp=sharing) contendo a ferramenta.
+2. Baixe a [VM Debian](https://drive.google.com/file/d/1es5qI6XZcK76Qr6ooMuovnmG5jgh5v-f/view?usp=sharing) contendo a ferramenta.
 3. Extraia os arquivos de dentro do ZIP.
 4. Clique no arquivo vbox. Isso deve carregar a máquina no VirtualBox.
 5. No VirtualBox, com a VM "debian 12" selecionada, clique em "start".
