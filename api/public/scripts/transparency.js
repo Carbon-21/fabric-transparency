@@ -622,7 +622,7 @@ window.calculateFileHashAuto = async function () {
       }
 
       if (!match)
-        ccDiv.innerHTML += `<br/>- The file hash does not any smart contract deployment hash in the blockchain... ❌ `;
+        ccDiv.innerHTML += `<br/>- The file hash does not match any smart contract deployment hash in the blockchain... ❌ `;
       else
         ccDiv.innerHTML += `<br/>- The file hash matches the latest smart contract deployment hash, in block ${response.indexes[i]}! ✅<br/>Done.`;
     }
@@ -704,7 +704,7 @@ window.calculateFileHash = async function () {
       }
 
       if (!match)
-        matchMessage = `<br/>The file hash does not any smart contract deployment hash in the blockchain... ❌ `;
+        matchMessage = `<br/>The file hash does not match any smart contract deployment hash in the blockchain... ❌ `;
       else
         matchMessage = `<br/>The file hash matches the latest smart contract deployment hash, in block ${response.indexes[i]}! ✅`;
     }
