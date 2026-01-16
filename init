@@ -7,14 +7,14 @@ export FABRIC_CFG_PATH=$(pwd)/config
 
 echo "IMPORTANT: Before running this script, configure $MICROFAB_CFG_PATH and put your chaincode inside the chaincode directory."
 
-echo "Killing any docker container..."
-containers=$(docker ps -q)
-if [ ! -z "$containers" ]
-then
-  docker kill $containers
-fi
+echo "Starting Kubo (IPFS) via docker compose (persistent volume)..."
+docker compose up -d ipfs
+sleep 2
 
-docker network prune -f && docker volume prune -f
+echo "Stopping previous microfab container (if any)..."
+docker rm -f microfab >/dev/null 2>&1 || true
+
+docker network prune -f
 sleep 2
 
 echo "Starting blockchain using $MICROFAB_CFG_PATH configuration..."

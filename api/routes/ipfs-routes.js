@@ -18,7 +18,8 @@ router.get(
 
 router.get(
   "/getIpnsContent",
-  [query("ipnsAddress").trim().not().isEmpty().isString(), validateAll],
+  // `ipnsAddress` is optional now; when omitted, backend resolves the configured key
+  [query("ipnsAddress").optional().trim().isString(), validateAll],
   ipfsController.getIpnsContent
 );
 

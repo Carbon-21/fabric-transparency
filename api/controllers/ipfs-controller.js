@@ -10,18 +10,22 @@ const {
 } = require("./query-controller");
 // const { getURILocal } = require("./query-controller");
 
-//create an IPFS node
-exports.createIpfsNode = async () => {
+// create a Kubo RPC client (singleton in app.js)
+exports.createIpfsClient = async () => {
   try {
-    const helia = await ipfs.createNode();
-    if (helia) {
-      logger.info("IPFS environment initialized successfully!");
-      return helia;
+    const client = await ipfs.createClient();
+    if (client) {
+      await ipfs.ensureIpnsKey(client);
+      logger.info("IPFS (Kubo RPC) initialized successfully!");
+      return client;
     }
   } catch (error) {
     return new HttpError(500, error);
   }
 };
+
+// Backwards-compatible export name (older app.js expects this)
+exports.createIpfsNode = exports.createIpfsClient;
 
 //post blockchain's tail + world state + previous cid to the IPFS
 //used by crontab
@@ -30,7 +34,7 @@ exports.postTransparencyLog = async (req, res, next) => {
   const channelName = "channel1";
 
   try {
-    const helia = req.helia;
+    const client = req.ipfs;
 
     // Get blockchain tail
     let tail = await getBlockchainTailLocal(chaincodeName, channelName);
@@ -40,7 +44,7 @@ exports.postTransparencyLog = async (req, res, next) => {
     const ws = await getWorldStateLocal(chaincodeName, channelName);
 
     // Write to IPFS and get CID
-    const cid = await ipfs.writeIPFS(tail, ws, helia);
+    const cid = await ipfs.writeIPFS(tail, ws, client);
 
     if (cid) {
       logger.info("Transparency log posted to IPFS with CID:", cid);
@@ -64,16 +68,15 @@ exports.getCidContent = async (req, res, next) => {
   const cid = req.query.cid;
 
   try {
-    const helia = req.helia;
+    const client = req.ipfs;
 
     // Get content
-    const result = await ipfs.getCidContent(cid, helia);
+    const result = await ipfs.getCidContent(cid, client);
 
     if (result) {
       res.status(200).json({
         success: true,
-        content: result.catContent,
-        pubKey: result.pubKey,
+        content: result,
         message: "Content retrieved from IPFS successfully",
       });
     } else {
@@ -89,15 +92,17 @@ exports.getIpnsContent = async (req, res, next) => {
   const ipnsAddress = req.query.ipnsAddress;
 
   try {
-    const helia = req.helia;
+    const client = req.ipfs;
 
     // Get content
-    const content = await ipfs.getIpnsContent(ipnsAddress, helia);
+    const content = await ipfs.getIpnsContent(ipnsAddress, client);
 
     if (content) {
       res.status(200).json({
         success: true,
-        content,
+        content: content.cid,
+        ipnsName: content.ipnsName,
+        keyName: content.keyName,
         message: "Content retrieved from IPNS successfully",
       });
     } else {
@@ -116,10 +121,10 @@ exports.getIpnsContent = async (req, res, next) => {
 //get the tail of the first publication on IPFS
 exports.getFirstTailOnIPFS = async (req, res, next) => {
   try {
-    const helia = req.helia;
+    const client = req.ipfs;
 
     // Get content
-    const result = await ipfs.getFirstTailOnIPFS(helia);
+    const result = await ipfs.getFirstTailOnIPFS(client);
 
     res.status(200).json(result);
   } catch (error) {
@@ -130,10 +135,10 @@ exports.getFirstTailOnIPFS = async (req, res, next) => {
 //get the tail of the last publication on IPFS
 exports.getLastTailOnIPFS = async (req, res, next) => {
   try {
-    const helia = req.helia;
+    const client = req.ipfs;
 
     // Get content
-    const result = await ipfs.getLastTailOnIPFS(helia);
+    const result = await ipfs.getLastTailOnIPFS(client);
 
     res.status(200).json(result);
   } catch (error) {

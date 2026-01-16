@@ -8154,28 +8154,29 @@ window.getCidContent = async function () {
     const responseData = await response.json();
     if (response.ok && responseData.success) {
       // await verify(responseData);
+      const content = responseData.content || {};
       ipfsPublicationStatusDiv.innerHTML = `
         <div class="alert alert-success mt-3">
           ✅ Content retrieved from IPFS!<br>
           <details>
             <summary><strong>World State</strong></summary>
-            <pre><code class="content" id="blockJson">${responseData.content[5]}</code></pre>
+            <pre><code class="content" id="blockJson">${content.worldState ?? ""}</code></pre>
           </details>
           <details>
             <summary><strong>Tail</strong></summary>
-            <pre><code class="content" id="blockJson">${responseData.content[4]}</code></pre>
+            <pre><code class="content" id="blockJson">${content.tail ?? ""}</code></pre>
           </details>
           <strong>First CID:</strong> 
-            ${responseData.content[2] ? responseData.content[2] : "Self."}
+            ${content.firstCid ? content.firstCid : "Self."}
           <br/><strong>Previous CID:</strong> 
-            ${responseData.content[3] ? responseData.content[3] : "None. This is the first IPFS publication."}
+            ${content.prevCid ? content.prevCid : "None. This is the first IPFS publication."}
           <details>
             <summary><strong>Digital certificate (X509)</strong></summary>
-            <pre><code class="content" id="blockJson">${responseData.content[1]}</code></pre>
+            <pre><code class="content" id="blockJson">${content.cert ?? ""}</code></pre>
           </details>
           <details>
             <summary><strong>Signature</strong></summary>
-            <pre><code class="content" id="blockJson">${responseData.content[0]}</code></pre>
+            <pre><code class="content" id="blockJson">${content.signature ?? ""}</code></pre>
           </details>
         </div>`;
     } else {
@@ -8293,7 +8294,7 @@ window.getIpnsContent = async function () {
       <div class="spinner-border ms-2" role="status"></div>
     </div>`;
   try {
-    const response = await fetch('/ipfs/getIpnsContent?ipnsAddress=bafzaajaiaejca3hgs6skjaabaoy722sqoiadxmvqqekrzdaeioxjnl67qigowi43', {
+    const response = await fetch('/ipfs/getIpnsContent', {
       method: "GET"
     });
     const responseData = await response.json();
@@ -8301,6 +8302,8 @@ window.getIpnsContent = async function () {
       ipfsPublicationStatusDiv.innerHTML = `
         <div class="alert alert-success mt-3">
           ✅ Content retrieved from IPNS!<br>
+          <strong>IPNS name:</strong> 
+            ${responseData.ipnsName || "(not set)"}<br>
           <strong>Content identifier (CID):</strong> 
             ${responseData.content}
           <button class="btn btn-sm btn-outline-secondary ms-2" 

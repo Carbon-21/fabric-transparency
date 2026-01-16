@@ -86,8 +86,15 @@ Se estiver executando a VM, a blockchain e a ferramenta de transparência já es
 
 ```
 cd fabric-transparency OU cd ~/Documents/fabric-transparency (se estiver usando a VM)
+docker compose up -d ipfs
 chmod +x init
 ./init
+```
+
+**IPFS (Kubo) / IPNS key**: na primeira execução, garanta que existe uma key chamada `transparency` no repo do Kubo (o `./init` sobe o container e mantém um volume persistente). Se necessário:
+
+```
+docker exec -it fabric-transparency-ipfs ipfs key gen transparency --type=ed25519
 ```
 
 Você deverá ver uma mensagem indicando que a ferramenta está disponível em `http://localhost:4000`. Após isso, poderá acessar o portal de transparência por esse endereço, em um navegador web. Caso a mensagem não seja exibida, execute o comando `./init` novamente.

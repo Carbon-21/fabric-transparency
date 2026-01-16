@@ -20,7 +20,7 @@ const error = require("./middleware/error");
 const { createAdmin } = require("./controllers/auth-crontroller");
 const {
   postTransparencyLog,
-  createIpfsNode,
+  createIpfsClient,
 } = require("./controllers/ipfs-controller");
 
 //routes
@@ -30,20 +30,20 @@ const queryRoutes = require("./routes/query-routes");
 const frontRoutes = require("./routes/front-routes");
 const ipfsRoutes = require("./routes/ipfs-routes");
 
-///// HELIA SINGLETON /////
-let helia = null;
-let heliaInitialized = false;
+///// IPFS (Kubo RPC) SINGLETON /////
+let ipfsClient = null;
+let ipfsInitialized = false;
 
-async function getHelia() {
-  if (heliaInitialized) return helia;
+async function getIpfsClient() {
+  if (ipfsInitialized) return ipfsClient;
 
   try {
-    helia = await createIpfsNode();
-    heliaInitialized = true;
-    return helia;
+    ipfsClient = await createIpfsClient();
+    ipfsInitialized = true;
+    return ipfsClient;
   } catch (err) {
-    logger.fatal("IPFS couldn't be initialized: ", err);
-    throw err; // Rethrow to handle in main
+    logger.fatal("IPFS (Kubo) couldn't be initialized: ", err);
+    throw err;
   }
 }
 
@@ -92,10 +92,10 @@ app.get("/", function (req, res) {
 });
 
 ///// ROUTES /////
-// Middleware to attach Helia to requests
+// Middleware to attach IPFS client to requests
 app.use(async (req, res, next) => {
   try {
-    req.helia = await getHelia();
+    req.ipfs = await getIpfsClient();
     next();
   } catch (err) {
     next(err);
@@ -118,8 +118,8 @@ app.use(error);
     // Initialize admin accounts
     await createAdmin();
 
-    // Initialize IPFS node
-    await getHelia();
+    // Initialize IPFS client
+    await getIpfsClient();
 
     // Start server
     const host = process.env.HOST;
