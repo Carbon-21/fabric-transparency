@@ -188,6 +188,19 @@ exports.writeIPFS = async (tail, ws, ipfs) => {
     if (prevCid) {
       const prevPub = await readPublication(ipfs, prevCid);
       firstCid = prevPub?.firstCid || prevCid;
+
+      // Heal chains that started with an invalid manifest.json (e.g. dev/test publishes)
+      // If the referenced first CID exists but has an unparsable manifest, reset the chain
+      // to start at the previous CID so future publications are clean/deterministic.
+      if (firstCid) {
+        const firstPub = await readPublication(ipfs, firstCid);
+        if (firstPub?.manifest === null && typeof firstPub?.manifestRaw === "string") {
+          logger.warn(
+            `First CID ${firstCid} has invalid manifest.json; resetting firstCid to ${prevCid}`
+          );
+          firstCid = prevCid;
+        }
+      }
     }
 
     const certPem = fs.readFileSync(path.join(__dirname, "../keys/ipfs-cert.pem"), "utf8");
