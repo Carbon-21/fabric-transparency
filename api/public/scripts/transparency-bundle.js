@@ -8125,10 +8125,6 @@ module.exports = safer
 (function (Buffer){(function (){
 let sha = require("js-sha256");
 let asnjs = require("asn1.js");
-// let cryptoBrowserify = require("crypto-browserify");
-// let buffer = require('buffer');
-// const fs = require("fs");
-// const path = require("path");
 
 // Flash messages that are displayed to the user in case of success or failure of the transaction execution
 const successFlashMessage = `<div  id="flash-message" class="alert alert-success alert-dismissible fade show mb-3 mt-3" role="alert">` + `Successful request` + `<button id="flash-button" type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>` + `</div>`;
@@ -8139,7 +8135,7 @@ const failureFlashMessage2 = `<div class="alert alert-danger alert-dismissible f
 window.getCidContent = async function () {
   let cidNumber = cid.value;
   const ipfsPublicationStatusDiv = document.getElementById("getCid");
-  ipfsPublicationStatusDiv.innerHTML = '';
+  ipfsPublicationStatusDiv.innerHTML = "";
 
   // Display loading indicator
   ipfsPublicationStatusDiv.innerHTML = `
@@ -8147,10 +8143,14 @@ window.getCidContent = async function () {
       <strong>Retrieving from IPFS...</strong>
       <div class="spinner-border ms-2" role="status"></div>
     </div>`;
+
+  //access the getCidContent function (API)
   try {
     const response = await fetch(`/ipfs/getCidContent?cid=${cidNumber}`, {
       method: "GET"
     });
+
+    //await the result and display it
     const responseData = await response.json();
     if (response.ok && responseData.success) {
       // await verify(responseData);
@@ -8180,7 +8180,7 @@ window.getCidContent = async function () {
           </details>
         </div>`;
     } else {
-      const errorMsg = responseData.message || 'Unknown error occurred';
+      const errorMsg = responseData.message || "Unknown error occurred";
       ipfsPublicationStatusDiv.innerHTML = `
         <div class="alert alert-danger mt-3">
           ❌ Error: ${errorMsg}
@@ -8189,7 +8189,7 @@ window.getCidContent = async function () {
   } catch (error) {
     ipfsPublicationStatusDiv.innerHTML = `
       <div class="alert alert-danger mt-3">
-        ❌ Network error: ${error.message || 'Could not connect to server'}
+        ❌ Network error: ${error.message || "Could not connect to server"}
       </div>`;
   }
 };
@@ -8285,7 +8285,7 @@ async function verify(publication) {
 //retrieve the content of an IPNS address (linked cid)
 window.getIpnsContent = async function () {
   const ipfsPublicationStatusDiv = document.getElementById("ipnsGet");
-  ipfsPublicationStatusDiv.innerHTML = '';
+  ipfsPublicationStatusDiv.innerHTML = "";
 
   // Display loading indicator
   ipfsPublicationStatusDiv.innerHTML = `
@@ -8294,7 +8294,7 @@ window.getIpnsContent = async function () {
       <div class="spinner-border ms-2" role="status"></div>
     </div>`;
   try {
-    const response = await fetch('/ipfs/getIpnsContent', {
+    const response = await fetch("/ipfs/getIpnsContent", {
       method: "GET"
     });
     const responseData = await response.json();
@@ -8312,7 +8312,7 @@ window.getIpnsContent = async function () {
           </button>
         </div>`;
     } else {
-      const errorMsg = responseData.message || 'Unknown error occurred';
+      const errorMsg = responseData.message || "Unknown error occurred";
       ipfsPublicationStatusDiv.innerHTML = `
         <div class="alert alert-danger mt-3">
           ❌ Error: ${errorMsg}
@@ -8321,10 +8321,111 @@ window.getIpnsContent = async function () {
   } catch (error) {
     ipfsPublicationStatusDiv.innerHTML = `
       <div class="alert alert-danger mt-3">
-        ❌ Network error: ${error.message || 'Could not connect to server'}
+        ❌ Network error: ${error.message || "Could not connect to server"}
       </div>`;
   }
 };
+
+// Suggested public gateways to open IPNS (use the key name, e.g. k51... not bafz...)
+const IPNS_PUBLIC_GATEWAYS = [{
+  name: "Orbitor (APAC)",
+  url: "https://apac.orbitor.dev/ipns/"
+}, {
+  name: "Orbitor (EU)",
+  url: "https://eu.orbitor.dev/ipns/"
+}, {
+  name: "IPFS.io",
+  url: "https://ipfs.io/ipns/"
+}];
+function buildIpnsGatewaysList(ipnsName) {
+  const ul = document.getElementById("ipnsGateways");
+  if (!ul) return;
+  ul.innerHTML = "";
+  if (!ipnsName) {
+    ul.innerHTML = "<li class=\"text-muted\">IPNS name will appear after the API connects to Kubo.</li>";
+    return;
+  }
+  IPNS_PUBLIC_GATEWAYS.forEach(gw => {
+    const li = document.createElement("li");
+    const a = document.createElement("a");
+    a.href = gw.url + ipnsName + "/";
+    a.target = "_blank";
+    a.rel = "noopener noreferrer";
+    a.textContent = gw.name + ": " + a.href;
+    li.appendChild(a);
+    ul.appendChild(li);
+  });
+}
+async function loadIpnsAddressAndGateways() {
+  const display = document.getElementById("ipnsNameDisplay");
+  if (!display) return;
+  display.textContent = "…";
+  buildIpnsGatewaysList(null);
+  try {
+    const response = await fetch("/ipfs/getIpnsContent", {
+      method: "GET"
+    });
+    const data = await response.json();
+    const ipnsName = data.ipnsName || null;
+    display.textContent = ipnsName || "—";
+    buildIpnsGatewaysList(ipnsName);
+  } catch (e) {
+    display.textContent = "—";
+    buildIpnsGatewaysList(null);
+  }
+}
+async function loadGatewaySyncStatus() {
+  const container = document.getElementById("gatewaySyncTableContainer");
+  if (!container) return;
+  container.innerHTML = `
+    <div class="d-flex align-items-center text-muted">
+      <div class="spinner-border spinner-border-sm me-2" role="status"></div>
+      <span>Checking public gateways…</span>
+    </div>`;
+  try {
+    const response = await fetch("/ipfs/gatewaySyncStatus", {
+      method: "GET"
+    });
+    const data = await response.json();
+    if (!response.ok || !data.success) {
+      container.innerHTML = `<div class="alert alert-warning py-2 small">Could not retrieve sync status.</div>`;
+      return;
+    }
+    if (!data.localCid || !data.gateways?.length) {
+      container.innerHTML = `<div class="alert alert-info py-2 small">No IPNS publication yet. Publish first to check sync.</div>`;
+      return;
+    }
+    const rows = data.gateways.map(gw => {
+      let status = "";
+      if (gw.synced) status = '<span class="text-success">✅ Synced</span>';else if (gw.stale) status = '<span class="text-warning">⏳ Stale (different CID)</span>';else status = '<span class="text-danger">❌ Error / timeout</span>';
+      const cidDisplay = gw.cid ? `<code class="small">${gw.cid}</code>` : "—";
+      return `<tr>
+            <td>${gw.name}</td>
+            <td>${status}</td>
+            <td>${cidDisplay}</td>
+            <td><a href="${gw.url}" target="_blank" rel="noopener">Open</a></td>
+          </tr>`;
+    }).join("");
+    container.innerHTML = `
+      <div class="small">
+        <p class="mb-1"><strong>Local node CID:</strong> <code>${data.localCid}</code></p>
+        <table class="table table-sm table-bordered">
+          <thead>
+            <tr><th>Gateway</th><th>Status</th><th>Resolved CID</th><th></th></tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>`;
+  } catch (e) {
+    container.innerHTML = `<div class="alert alert-danger py-2 small">Error: ${e.message}</div>`;
+  }
+}
+window.loadGatewaySyncStatus = loadGatewaySyncStatus;
+if (typeof document !== "undefined" && document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", loadIpnsAddressAndGateways);
+} else if (typeof document !== "undefined") {
+  loadIpnsAddressAndGateways();
+}
 
 //retrieve a block
 window.getBlockByNumber = async function () {
@@ -8448,7 +8549,7 @@ window.getWorldState = async function () {
 //retrieve all blocks, hash them and check if the resulting hashes match the retrieved ones. also, hash the first block on IPFS and compare it to the one provided by the blockchain network.
 window.checkBlockchainAuto = async function () {
   let blocksDiv = document.getElementById("autoBlocks");
-  blocksDiv.innerHTML = '';
+  blocksDiv.innerHTML = "";
 
   //make request to the backend
   let url = `http://localhost:4000/query/channels/channel1/chaincodes/chaincode/getRangeOfBlocks?min=beginning&max=end`;
@@ -8458,7 +8559,7 @@ window.checkBlockchainAuto = async function () {
   let response = await fetch(url, init);
   if (response.ok) {
     response = await response.json();
-    blocksDiv.innerHTML += '- Retrieved all blocks from the blockchain...';
+    blocksDiv.innerHTML += "- Retrieved all blocks from the blockchain...";
 
     //hash every block and check if they correspond to the previousHash field in the following block
     let blocksMatch = true;
@@ -8479,7 +8580,7 @@ window.checkBlockchainAuto = async function () {
     blocksMatch ? blocksDiv.innerHTML += `<br/>- The block hashes match those sent by the blockchain network! ✅` : blocksDiv.innerHTML += `<br/>- The block hashes do not match those sent by the blockchain network! ❌`;
 
     //get first tail on IPFS
-    const responseData = await fetch('/ipfs/getLastTailOnIPFS', {
+    const responseData = await fetch("/ipfs/getLastTailOnIPFS", {
       method: "GET"
     });
     const lastTail = await responseData.json();
@@ -8587,7 +8688,7 @@ window.checkBlockchain = async function () {
 //check if chaincode deployed matches the one on github repository
 window.calculateFileHashAuto = async function () {
   const ccDiv = document.getElementById("autoCC");
-  ccDiv.innerHTML = '';
+  ccDiv.innerHTML = "";
   let match = false;
   try {
     //get smart contract from github
@@ -8609,9 +8710,9 @@ window.calculateFileHashAuto = async function () {
     }
 
     // Hash then convert to hex string
-    const hashBuffer = await crypto.subtle.digest('SHA-256', arrayBuffer);
+    const hashBuffer = await crypto.subtle.digest("SHA-256", arrayBuffer);
     const hashArray = Array.from(new Uint8Array(hashBuffer));
-    const fileHash = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    const fileHash = hashArray.map(b => b.toString(16).padStart(2, "0")).join("");
 
     // Go through all chaincode deployments in the blockchain
     for (let i = 0; i < response.hashes.length; i++) {
@@ -8620,7 +8721,7 @@ window.calculateFileHashAuto = async function () {
         // Check if the file hash matches a deployment hash in the blockchain
         if (String(response.hashes[i][j]) == String(fileHash)) match = true;else match = false;
       }
-      if (!match) ccDiv.innerHTML += `<br/>- The file hash does not any smart contract deployment hash in the blockchain... ❌ `;else ccDiv.innerHTML += `<br/>- The file hash matches the latest smart contract deployment hash, in block ${response.indexes[i]}! ✅<br/>Done.`;
+      if (!match) ccDiv.innerHTML += `<br/>- The file hash does not match any smart contract deployment hash in the blockchain... ❌ `;else ccDiv.innerHTML += `<br/>- The file hash matches the latest smart contract deployment hash, in block ${response.indexes[i]}! ✅<br/>Done.`;
     }
   } catch (error) {
     console.log(error);
@@ -8629,8 +8730,8 @@ window.calculateFileHashAuto = async function () {
 
 //check if chaincode deployed matches the one uploaded
 window.calculateFileHash = async function () {
-  const hashResult = document.getElementById('hashResult');
-  const fileInput = document.getElementById('contractFile');
+  const hashResult = document.getElementById("hashResult");
+  const fileInput = document.getElementById("contractFile");
   let match = false;
   if (!fileInput.files || fileInput.files.length === 0) {
     hashResult.innerHTML = '<div class="alert alert-warning">Please select a file first</div>';
@@ -8660,11 +8761,11 @@ window.calculateFileHash = async function () {
     console.log("file", file);
     const arrayBuffer = await file.arrayBuffer();
     console.log("arrayBuffer", arrayBuffer);
-    const hashBuffer = await crypto.subtle.digest('SHA-256', arrayBuffer);
+    const hashBuffer = await crypto.subtle.digest("SHA-256", arrayBuffer);
 
     // Convert hash to hex string
     const hashArray = Array.from(new Uint8Array(hashBuffer));
-    const fileHash = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    const fileHash = hashArray.map(b => b.toString(16).padStart(2, "0")).join("");
 
     // Go through all chaincode deployments in the blockchain
     for (let i = 0; i < response.hashes.length; i++) {
@@ -8683,7 +8784,7 @@ window.calculateFileHash = async function () {
         // Check if the file hash matches a deployment hash in the blockchain
         if (String(response.hashes[i][j]) == String(fileHash)) match = true;else match = false;
       }
-      if (!match) matchMessage = `<br/>The file hash does not any smart contract deployment hash in the blockchain... ❌ `;else matchMessage = `<br/>The file hash matches the latest smart contract deployment hash, in block ${response.indexes[i]}! ✅`;
+      if (!match) matchMessage = `<br/>The file hash does not match any smart contract deployment hash in the blockchain... ❌ `;else matchMessage = `<br/>The file hash matches the latest smart contract deployment hash, in block ${response.indexes[i]}! ✅`;
     }
 
     // Display results
@@ -8701,14 +8802,14 @@ window.calculateFileHash = async function () {
               </div>`;
     document.getElementById("flash").innerHTML = successFlashMessage;
   } catch (error) {
-    console.error('Error calculating hash:', error);
+    console.error("Error calculating hash:", error);
     hashResult.innerHTML = `<div class="alert alert-danger">Error calculating hash: ${error.message}</div>`;
     document.getElementById("flash").innerHTML = failureFlashMessage;
   }
 };
 window.postTransparencyLog = async function () {
   const ipfsPublicationStatusDiv = document.getElementById("ipfsPublicationStatus");
-  ipfsPublicationStatusDiv.innerHTML = '';
+  ipfsPublicationStatusDiv.innerHTML = "";
 
   // Display loading indicator
   ipfsPublicationStatusDiv.innerHTML = `
@@ -8717,7 +8818,7 @@ window.postTransparencyLog = async function () {
       <div class="spinner-border ms-2" role="status"></div>
     </div>`;
   try {
-    const response = await fetch('/ipfs/postTransparencyLog', {
+    const response = await fetch("/ipfs/postTransparencyLog", {
       method: "POST"
     });
     const responseData = await response.json();
@@ -8738,17 +8839,17 @@ window.postTransparencyLog = async function () {
       // ipfsPublicationStatusDiv.innerHTML = `
       //   <div class="alert alert-success mt-3">
       //     ✅ Transparency log successfully published!<br>
-      //     <strong>CID:</strong> 
+      //     <strong>CID:</strong>
       //     <a href="${cidLink}" target="_blank" class="text-break">
       //       ${responseData.cid}
       //     </a>
-      //     <button class="btn btn-sm btn-outline-secondary ms-2" 
+      //     <button class="btn btn-sm btn-outline-secondary ms-2"
       //             onclick="navigator.clipboard.writeText('${responseData.cid}')">
       //       Copy
       //     </button>
       //   </div>`;
     } else {
-      const errorMsg = responseData.message || 'Unknown error occurred';
+      const errorMsg = responseData.message || "Unknown error occurred";
       ipfsPublicationStatusDiv.innerHTML = `
         <div class="alert alert-danger mt-3">
           ❌ Failed to publish: ${errorMsg}
@@ -8757,7 +8858,7 @@ window.postTransparencyLog = async function () {
   } catch (error) {
     ipfsPublicationStatusDiv.innerHTML = `
       <div class="alert alert-danger mt-3">
-        ❌ Network error: ${error.message || 'Could not connect to server'}
+        ❌ Network error: ${error.message || "Could not connect to server"}
       </div>`;
   }
 
@@ -8787,7 +8888,7 @@ var calculateBlockHash = function (header) {
 };
 async function downloadChaincode() {
   try {
-    const response = await fetch('https://raw.githubusercontent.com/Carbon-21/fabric-transparency/main/chaincode/chaincode.tgz');
+    const response = await fetch("https://raw.githubusercontent.com/Carbon-21/fabric-transparency/main/chaincode/chaincode.tgz");
     const arrayBuffer = await response.arrayBuffer();
     // const file = new Uint8Array(arrayBuffer); // this is the binary data
     return arrayBuffer;
@@ -8799,7 +8900,7 @@ async function downloadChaincode() {
 async function importRSAPublicKeyFromPEM(pem) {
   console.log("a");
   // Remove header, footer, and line breaks
-  const pemBody = pem.replace(/-----BEGIN CERTIFICATE-----/, '').replace(/-----END CERTIFICATE-----/, '').replace(/\s+/g, '');
+  const pemBody = pem.replace(/-----BEGIN CERTIFICATE-----/, "").replace(/-----END CERTIFICATE-----/, "").replace(/\s+/g, "");
   console.log("b");
   const binaryDer = atob(pemBody);
   const binaryDerBuffer = new Uint8Array(binaryDer.length);

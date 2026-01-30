@@ -2,8 +2,13 @@ const logger = require("./logger");
 const fs = require("fs");
 const path = require("path");
 const crypto = require("crypto");
+const https = require("https");
 
 const DEFAULT_IPFS_API_URL = "http://127.0.0.1:5001";
+
+// Mutex: serialize IPFS/IPNS publications to avoid race conditions when the user clicks multiple times.
+// Each call waits for the previous to finish so prevCid is always correct.
+let _publishLock = Promise.resolve();
 const DEFAULT_IPNS_KEY_NAME = "transparency";
 
 exports.DEFAULT_IPNS_KEY_NAME = DEFAULT_IPNS_KEY_NAME;
@@ -177,28 +182,36 @@ async function addPublicationDirectory(ipfs, files) {
   return rootCid;
 }
 
-// Write blockchain tail + world state to IPFS, then publish to IPNS (Kubo key)
-exports.writeIPFS = async (tail, ws, ipfs) => {
+// Inner implementation (called with lock held)
+async function doWriteIPFS(tail, ws, ipfs) {
   try {
     const keyName = process.env.IPNS_KEY_NAME || DEFAULT_IPNS_KEY_NAME;
     await exports.ensureIpnsKey(ipfs, keyName);
 
     const prevCid = await resolveLatestCidFromKey(ipfs, keyName);
     let firstCid = "";
+    let actualPrevCid = ""; // prevCid to use (empty if prev was placeholder)
+
     if (prevCid) {
       const prevPub = await readPublication(ipfs, prevCid);
-      firstCid = prevPub?.firstCid || prevCid;
 
-      // Heal chains that started with an invalid manifest.json (e.g. dev/test publishes)
-      // If the referenced first CID exists but has an unparsable manifest, reset the chain
-      // to start at the previous CID so future publications are clean/deterministic.
-      if (firstCid) {
-        const firstPub = await readPublication(ipfs, firstCid);
-        if (firstPub?.manifest === null && typeof firstPub?.manifestRaw === "string") {
-          logger.warn(
-            `First CID ${firstCid} has invalid manifest.json; resetting firstCid to ${prevCid}`
-          );
-          firstCid = prevCid;
+      // If previous publication is the empty placeholder, treat as if there's no previous publication
+      if (prevPub?.manifest?.empty === true) {
+        firstCid = "";
+        actualPrevCid = "";
+      } else {
+        firstCid = prevPub?.firstCid || prevCid;
+        actualPrevCid = prevCid;
+
+        // Heal chains that started with an invalid manifest.json (e.g. dev/test publishes)
+        if (firstCid) {
+          const firstPub = await readPublication(ipfs, firstCid);
+          if (firstPub?.manifest === null && typeof firstPub?.manifestRaw === "string") {
+            logger.warn(
+              `First CID ${firstCid} has invalid manifest.json; resetting firstCid to ${prevCid}`
+            );
+            firstCid = prevCid;
+          }
         }
       }
     }
@@ -208,7 +221,7 @@ exports.writeIPFS = async (tail, ws, ipfs) => {
       normalizeToString(tail),
       normalizeToString(ws),
       firstCid,
-      prevCid || "",
+      actualPrevCid || "",
       certPem
     );
 
@@ -216,7 +229,7 @@ exports.writeIPFS = async (tail, ws, ipfs) => {
       schemaVersion: 1,
       timestamp: Date.now(),
       firstCid: firstCid || "",
-      prevCid: prevCid || "",
+      prevCid: actualPrevCid || "",
     };
 
     const rootCid = await addPublicationDirectory(ipfs, [
@@ -229,13 +242,57 @@ exports.writeIPFS = async (tail, ws, ipfs) => {
 
     if (!rootCid) throw new Error("Failed to compute publication root CID");
 
+    const keyId = await getKeyId(ipfs, keyName);
+    logger.info(`IPNS: publishing CID ${rootCid} to key "${keyName}" (Key ID: ${keyId || "?"})`);
+    if (prevCid) {
+      logger.info(`IPNS: previous pointer was /ipfs/${prevCid}`);
+    } else {
+      logger.info("IPNS: this is the first publication (no previous pointer)");
+    }
+
     await ipfs.name.publish(`/ipfs/${rootCid}`, { key: keyName, allowOffline: true });
-    logger.info(`IPFS publication created: ${rootCid} (IPNS key: ${keyName})`);
+    logger.info(`IPNS: updated /ipns/${keyId || keyName} -> /ipfs/${rootCid}`);
     return rootCid;
   } catch (error) {
     logger.error(error);
     return null;
   }
+}
+
+// Write blockchain tail + world state to IPFS, then publish to IPNS (Kubo key).
+// Serialized via mutex to prevent race conditions when the user clicks publish multiple times.
+exports.writeIPFS = async (tail, ws, ipfs) => {
+  const previous = _publishLock;
+  let resolveOwn;
+  _publishLock = new Promise((r) => { resolveOwn = r; });
+  try {
+    await previous; // wait for any in-flight publication to finish
+    const result = await doWriteIPFS(tail, ws, ipfs);
+    return result;
+  } finally {
+    resolveOwn();
+  }
+};
+
+// Publish an "empty" placeholder to IPNS so that after init there is no real publication
+// (getLastTailOnIPFS / getFirstTailOnIPFS return null and the UI shows "do your first publication").
+exports.publishEmptyPlaceholder = async (ipfs) => {
+  const keyName = process.env.IPNS_KEY_NAME || DEFAULT_IPNS_KEY_NAME;
+  await exports.ensureIpnsKey(ipfs, keyName);
+  const manifest = {
+    schemaVersion: 1,
+    empty: true,
+    timestamp: 0,
+    firstCid: "",
+    prevCid: "",
+  };
+  const rootCid = await addPublicationDirectory(ipfs, [
+    { path: "manifest.json", content: Buffer.from(JSON.stringify(manifest, null, 2)) },
+  ]);
+  if (!rootCid) throw new Error("Failed to compute empty publication CID");
+  await ipfs.name.publish(`/ipfs/${rootCid}`, { key: keyName, allowOffline: true });
+  logger.info(`IPNS set to empty placeholder (CID: ${rootCid})`);
+  return rootCid;
 };
 
 // Return the first tail registered on IPFS
@@ -245,6 +302,8 @@ exports.getFirstTailOnIPFS = async (ipfs) => {
   if (!currentCid) return null;
 
   const currentPub = await readPublication(ipfs, currentCid);
+  if (currentPub?.manifest?.empty === true) return null;
+
   const firstCid = currentPub?.firstCid || currentCid;
   const firstPub = await readPublication(ipfs, firstCid);
   return firstPub?.tail || null;
@@ -257,6 +316,8 @@ exports.getLastTailOnIPFS = async (ipfs) => {
   if (!currentCid) return null;
 
   const currentPub = await readPublication(ipfs, currentCid);
+  if (currentPub?.manifest?.empty === true) return null;
+
   return currentPub?.tail || null;
 };
 
@@ -288,6 +349,68 @@ exports.getIpnsContent = async (ipnsAddress, ipfs) => {
     logger.error(error);
     return null;
   }
+};
+
+// Public gateways to check for IPNS sync (apiBase used for /api/v0/name/resolve)
+const PUBLIC_GATEWAYS = [
+  { name: "Orbitor (APAC)", url: "https://apac.orbitor.dev/ipns/", apiBase: "https://apac.orbitor.dev" },
+  { name: "Orbitor (EU)", url: "https://eu.orbitor.dev/ipns/", apiBase: "https://eu.orbitor.dev" },
+  { name: "IPFS.io", url: "https://ipfs.io/ipns/", apiBase: "https://ipfs.io" },
+];
+exports.PUBLIC_GATEWAYS = PUBLIC_GATEWAYS;
+
+// Public gateways don't expose Kubo RPC (/api/v0/). Use path gateway + X-Ipfs-Roots header.
+// GET /ipns/{name}/ returns headers: x-ipfs-roots: <cid> (resolved CID)
+function fetchResolveFromGateway(apiBase, ipnsName, timeoutMs = 15000) {
+  return new Promise((resolve) => {
+    const path = `/ipns/${ipnsName}/`;
+    const url = `${apiBase}${path}`;
+    const req = https.get(
+      url,
+      { timeout: timeoutMs, headers: { "Accept": "application/json" } },
+      (res) => {
+        const roots = res.headers["x-ipfs-roots"] || res.headers["X-Ipfs-Roots"];
+        if (roots) {
+          const cid = String(roots).trim().split(/[\s,]+/)[0];
+          resolve(cid || null);
+        } else {
+          resolve(null);
+        }
+        res.resume(); // consume body to free memory
+      }
+    );
+    req.on("error", () => resolve(null));
+    req.on("timeout", () => { req.destroy(); resolve(null); });
+  });
+}
+
+// Check if each public gateway has synced with our local node's IPNS record.
+// Returns { localCid, ipnsName, gateways: [{ name, url, cid, synced, error? }] }
+exports.getGatewaySyncStatus = async (ipfs) => {
+  const ipnsResult = await exports.getIpnsContent(null, ipfs);
+  if (!ipnsResult?.ipnsName || !ipnsResult?.cid) {
+    return { localCid: null, ipnsName: null, gateways: [] };
+  }
+  const localCid = ipnsResult.cid.replace(/^\/ipfs\//, "").trim();
+  const ipnsName = ipnsResult.ipnsName;
+
+  const results = await Promise.all(
+    PUBLIC_GATEWAYS.map(async (gw) => {
+      const remoteCid = await fetchResolveFromGateway(gw.apiBase, ipnsName);
+      const synced = remoteCid !== null && remoteCid === localCid;
+      const stale = remoteCid !== null && remoteCid !== localCid;
+      return {
+        name: gw.name,
+        url: gw.url + ipnsName + "/",
+        cid: remoteCid,
+        synced,
+        stale,
+        error: remoteCid === null ? "Could not resolve or timeout" : null,
+      };
+    })
+  );
+
+  return { localCid, ipnsName, gateways: results };
 };
 
 /////// AUX //////

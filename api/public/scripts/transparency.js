@@ -229,6 +229,108 @@ window.getIpnsContent = async function () {
   }
 };
 
+// Suggested public gateways to open IPNS (use the key name, e.g. k51... not bafz...)
+const IPNS_PUBLIC_GATEWAYS = [
+  { name: "Orbitor (APAC)", url: "https://apac.orbitor.dev/ipns/" },
+  { name: "Orbitor (EU)", url: "https://eu.orbitor.dev/ipns/" },
+  { name: "IPFS.io", url: "https://ipfs.io/ipns/" },
+];
+
+function buildIpnsGatewaysList(ipnsName) {
+  const ul = document.getElementById("ipnsGateways");
+  if (!ul) return;
+  ul.innerHTML = "";
+  if (!ipnsName) {
+    ul.innerHTML = "<li class=\"text-muted\">IPNS name will appear after the API connects to Kubo.</li>";
+    return;
+  }
+  IPNS_PUBLIC_GATEWAYS.forEach((gw) => {
+    const li = document.createElement("li");
+    const a = document.createElement("a");
+    a.href = gw.url + ipnsName + "/";
+    a.target = "_blank";
+    a.rel = "noopener noreferrer";
+    a.textContent = gw.name + ": " + a.href;
+    li.appendChild(a);
+    ul.appendChild(li);
+  });
+}
+
+async function loadIpnsAddressAndGateways() {
+  const display = document.getElementById("ipnsNameDisplay");
+  if (!display) return;
+  display.textContent = "…";
+  buildIpnsGatewaysList(null);
+  try {
+    const response = await fetch("/ipfs/getIpnsContent", { method: "GET" });
+    const data = await response.json();
+    const ipnsName = data.ipnsName || null;
+    display.textContent = ipnsName || "—";
+    buildIpnsGatewaysList(ipnsName);
+  } catch (e) {
+    display.textContent = "—";
+    buildIpnsGatewaysList(null);
+  }
+}
+
+async function loadGatewaySyncStatus() {
+  const container = document.getElementById("gatewaySyncTableContainer");
+  if (!container) return;
+  container.innerHTML = `
+    <div class="d-flex align-items-center text-muted">
+      <div class="spinner-border spinner-border-sm me-2" role="status"></div>
+      <span>Checking public gateways…</span>
+    </div>`;
+  try {
+    const response = await fetch("/ipfs/gatewaySyncStatus", { method: "GET" });
+    const data = await response.json();
+    if (!response.ok || !data.success) {
+      container.innerHTML = `<div class="alert alert-warning py-2 small">Could not retrieve sync status.</div>`;
+      return;
+    }
+    if (!data.localCid || !data.gateways?.length) {
+      container.innerHTML = `<div class="alert alert-info py-2 small">No IPNS publication yet. Publish first to check sync.</div>`;
+      return;
+    }
+    const rows = data.gateways
+      .map(
+        (gw) => {
+          let status = "";
+          if (gw.synced) status = '<span class="text-success">✅ Synced</span>';
+          else if (gw.stale) status = '<span class="text-warning">⏳ Stale (different CID)</span>';
+          else status = '<span class="text-danger">❌ Error / timeout</span>';
+          const cidDisplay = gw.cid ? `<code class="small">${gw.cid}</code>` : "—";
+          return `<tr>
+            <td>${gw.name}</td>
+            <td>${status}</td>
+            <td>${cidDisplay}</td>
+            <td><a href="${gw.url}" target="_blank" rel="noopener">Open</a></td>
+          </tr>`;
+        }
+      )
+      .join("");
+    container.innerHTML = `
+      <div class="small">
+        <p class="mb-1"><strong>Local node CID:</strong> <code>${data.localCid}</code></p>
+        <table class="table table-sm table-bordered">
+          <thead>
+            <tr><th>Gateway</th><th>Status</th><th>Resolved CID</th><th></th></tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>`;
+  } catch (e) {
+    container.innerHTML = `<div class="alert alert-danger py-2 small">Error: ${e.message}</div>`;
+  }
+}
+window.loadGatewaySyncStatus = loadGatewaySyncStatus;
+
+if (typeof document !== "undefined" && document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", loadIpnsAddressAndGateways);
+} else if (typeof document !== "undefined") {
+  loadIpnsAddressAndGateways();
+}
+
 //retrieve a block
 window.getBlockByNumber = async function () {
   let block = blockNumber.value;

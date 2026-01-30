@@ -379,10 +379,14 @@
                   <p>
                     <br /><small
                       >Below, you can check that the IPNS address
-                      (bafzaajaiaejca3hgs6skjaabaoy722sqoiadxmvqqekrzdaeioxjnl67qigowi43)
-                      always points to the latest CID.</small
+                      (<span id="ipnsNameDisplay">…</span>) always points to the latest CID.
+                      Suggested public gateways (open the IPNS link to see the latest publication):</small
                     >
                   </p>
+                  <ul id="ipnsGateways" class="small mt-1 mb-0"></ul>
+                  <p class="mt-2 mb-1"><small>Public gateways may take time to sync with your local node. Check if they have the latest CID:</small></p>
+                  <button type="button" class="btn btn-outline-secondary btn-sm" onclick="loadGatewaySyncStatus()">Check gateway sync status</button>
+                  <div id="gatewaySyncTableContainer" class="mt-2"></div>
                 </spam>
                 <div class="mt-3">
                   <button

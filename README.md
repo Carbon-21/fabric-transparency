@@ -91,11 +91,23 @@ chmod +x init
 ./init
 ```
 
-**IPFS (Kubo) / IPNS key**: na primeira execução, garanta que existe uma key chamada `transparency` no repo do Kubo (o `./init` sobe o container e mantém um volume persistente). Se necessário:
+**IPFS (Kubo) / IPNS key**: o `./init` sobe o Kubo com volume persistente e garante que existe uma key para IPNS. A key é gerenciada da seguinte forma:
 
-```
-docker exec -it fabric-transparency-ipfs ipfs key gen transparency --type=ed25519
-```
+- **Arquivo**: `api/keys/ipns-key.key` (formato libp2p Ed25519, **não é PEM**).
+- **Fluxo**: **ARQUIVO é a fonte da verdade** → sempre importado para o Kubo (nunca o contrário).
+- **Criação**: se o arquivo não existir, o `./init` gera uma key nova e salva no arquivo.
+- **Sincronização**: o `./init` **sempre** importa `api/keys/ipns-key.key` no Kubo, sobrescrevendo a key `transparency` se já existir.
+- **Key ID (endereço IPNS)**: é derivado da key no arquivo; fica sempre o mesmo quando você usa o mesmo `ipns-key.key`.
+
+**Duas chaves distintas**:
+1. **RSA** (`api/keys/ipfs-key.pem` + `ipfs-cert.pem`): assina o **conteúdo** da publicação (tail + world state + ...).
+2. **Ed25519** (`api/keys/ipns-key.key`): usada pelo **IPNS** para vincular o nome `/ipns/<Key ID>` ao CID mais recente.
+
+**Commitar ou não**:
+- Se você **commitar** `api/keys/ipns-key.key`, todos os deploys terão o **mesmo Key ID** (endereço IPNS fixo).
+- Se **adicionar ao `.gitignore`**, cada ambiente gera sua própria key na primeira execução do `./init`.
+
+**Persistência do IPNS**: Por padrão, o `./init` **não** reseta o IPNS. Publicações anteriores permanecem visíveis ao rodar init novamente. Para resetar o IPNS (ex.: começar do zero para uma demo), use: `INIT_RESET_IPNS=1 ./init`.
 
 Você deverá ver uma mensagem indicando que a ferramenta está disponível em `http://localhost:4000`. Após isso, poderá acessar o portal de transparência por esse endereço, em um navegador web. Caso a mensagem não seja exibida, execute o comando `./init` novamente.
 

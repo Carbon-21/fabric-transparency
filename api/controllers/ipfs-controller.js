@@ -146,6 +146,21 @@ exports.getLastTailOnIPFS = async (req, res, next) => {
   }
 };
 
+// Check if public gateways have synced with our local node's IPNS record
+exports.getGatewaySyncStatus = async (req, res, next) => {
+  try {
+    const client = req.ipfs;
+    const result = await ipfs.getGatewaySyncStatus(client);
+    res.status(200).json({
+      success: true,
+      ...result,
+      message: "Gateway sync status retrieved",
+    });
+  } catch (error) {
+    next(new HttpError(500, "Error retrieving gateway sync status: " + error));
+  }
+};
+
 //get last block posted to IPFS
 //deprecated: IPFS' cid not save onchain anymore. we are now using IPNS. "last ipfs block" isn't displayed on logs page anymore, because... why doing it?
 // exports.getLatestIPFSBlock = async (req, res, next) => {
