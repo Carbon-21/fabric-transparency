@@ -7,6 +7,12 @@ export FABRIC_CFG_PATH=$(pwd)/config
 
 echo "IMPORTANT: Before running this script, configure $MICROFAB_CFG_PATH and put your chaincode inside the chaincode directory."
 
+
+# Since the init script resets the blockchain, you need to "reset" the IPFS logs as well (i.e., point to nothing)
+echo "Regenerating the IPNS key. IMPORTANT: Remove in production"
+docker compose down -v
+rm -f api/keys/ipns-key.key 
+
 echo "Starting Kubo (IPFS) via docker compose (persistent volume)..."
 docker compose up -d ipfs
 sleep 5
@@ -17,6 +23,7 @@ sleep 5
 # 2. If file exists: remove key from Kubo (if exists) and import from file
 IPNS_KEY_FILE=api/keys/ipns-key.key
 IPNS_KEY_NAME=transparency
+
 
 if [ ! -s "$IPNS_KEY_FILE" ]; then
   # File doesn't exist or is empty -> generate new key

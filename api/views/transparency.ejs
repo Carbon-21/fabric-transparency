@@ -377,15 +377,13 @@
                   to subscribe to this address and automatically receive every
                   new transparency log.
                   <p>
-                    <br /><small
-                      >Below, you can check that the IPNS address
-                      (<span id="ipnsNameDisplay">…</span>) always points to the latest CID.
-                      Suggested public gateways (open the IPNS link to see the latest publication):</small
-                    >
+                    <br /><spam class="description">
+                      Below, you can check if the IPNS address
+                      (<span id="ipnsNameDisplay">…</span>) points to the latest CID. This can be done either directly via the integration to IPFS (button below) or via a gateway. Note that <strong>it may take some time</strong> to sync with your local node. Suggested public gateways:
                   </p>
                   <ul id="ipnsGateways" class="small mt-1 mb-0"></ul>
-                  <p class="mt-2 mb-1"><small>Public gateways may take time to sync with your local node. Check if they have the latest CID:</small></p>
-                  <button type="button" class="btn btn-outline-secondary btn-sm" onclick="loadGatewaySyncStatus()">Check gateway sync status</button>
+                  <!-- <p class="mt-2 mb-1"><small>Public gateways may take time to sync with your local node. Check if they have the latest CID:</small></p> -->
+                  <!-- <button type="button" class="btn btn-outline-secondary btn-sm" onclick="loadGatewaySyncStatus()">Check gateway sync status</button> -->
                   <div id="gatewaySyncTableContainer" class="mt-2"></div>
                 </spam>
                 <div class="mt-3">
