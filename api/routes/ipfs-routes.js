@@ -18,12 +18,15 @@ router.get(
 
 router.get(
   "/getIpnsContent",
-  [query("ipnsAddress").trim().not().isEmpty().isString(), validateAll],
+  // `ipnsAddress` is optional now; when omitted, backend resolves the configured key
+  [query("ipnsAddress").optional().trim().isString(), validateAll],
   ipfsController.getIpnsContent
 );
 
 router.get("/getFirstTailOnIPFS", ipfsController.getFirstTailOnIPFS);
 
 router.get("/getLastTailOnIPFS", ipfsController.getLastTailOnIPFS);
+
+router.get("/gatewaySyncStatus", ipfsController.getGatewaySyncStatus);
 
 module.exports = router;

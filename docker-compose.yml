@@ -1,0 +1,14 @@
+services:
+  ipfs:
+    image: ipfs/kubo:latest
+    container_name: fabric-transparency-ipfs
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:5001:5001" # Kubo RPC API
+      - "127.0.0.1:8081:8080" # (optional) Gateway (avoid clashing with Microfab on 8080)
+      - "4001:4001" # Swarm
+    volumes:
+      - ipfs-data:/data/ipfs
+
+volumes:
+  ipfs-data:

@@ -7,14 +7,44 @@ export FABRIC_CFG_PATH=$(pwd)/config
 
 echo "IMPORTANT: Before running this script, configure $MICROFAB_CFG_PATH and put your chaincode inside the chaincode directory."
 
-echo "Killing any docker container..."
-containers=$(docker ps -q)
-if [ ! -z "$containers" ]
-then
-  docker kill $containers
+echo "Starting Kubo (IPFS) via docker compose (persistent volume)..."
+docker compose up -d ipfs
+sleep 5
+
+# Ensure IPNS key exists in api/keys/ipns-key.key (libp2p Ed25519 format, NOT PEM).
+# The FILE is the source of truth. Flow: FILE -> KUBO (never Kubo -> file)
+# 1. If file doesn't exist: generate new key, save to file, import to Kubo
+# 2. If file exists: remove key from Kubo (if exists) and import from file
+IPNS_KEY_FILE=api/keys/ipns-key.key
+IPNS_KEY_NAME=transparency
+
+if [ ! -s "$IPNS_KEY_FILE" ]; then
+  # File doesn't exist or is empty -> generate new key
+  echo "Generating new IPNS key (Ed25519) and saving to $IPNS_KEY_FILE..."
+  mkdir -p api/keys
+  # Generate in Kubo temporarily to get the key file
+  docker exec fabric-transparency-ipfs ipfs key gen temp-ipns-gen --type=ed25519 >/dev/null
+  docker exec fabric-transparency-ipfs ipfs key export temp-ipns-gen -o /tmp/ipns-new.key
+  docker cp fabric-transparency-ipfs:/tmp/ipns-new.key "$IPNS_KEY_FILE"
+  docker exec fabric-transparency-ipfs ipfs key rm temp-ipns-gen >/dev/null 2>&1 || true
+  docker exec fabric-transparency-ipfs rm -f /tmp/ipns-new.key
+  echo "IPNS key file created: $IPNS_KEY_FILE"
 fi
 
-docker network prune -f && docker volume prune -f
+# Now import the file to Kubo (always, to ensure Kubo matches the file)
+echo "Importing IPNS key from $IPNS_KEY_FILE to Kubo as '${IPNS_KEY_NAME}'..."
+# Remove existing key in Kubo if present
+docker exec fabric-transparency-ipfs ipfs key rm "${IPNS_KEY_NAME}" >/dev/null 2>&1 || true
+# Import from file
+docker cp "$IPNS_KEY_FILE" fabric-transparency-ipfs:/tmp/ipns-key.key
+docker exec fabric-transparency-ipfs ipfs key import "${IPNS_KEY_NAME}" /tmp/ipns-key.key
+docker exec fabric-transparency-ipfs rm -f /tmp/ipns-key.key
+echo "IPNS key '${IPNS_KEY_NAME}' synced from file to Kubo."
+
+echo "Stopping previous microfab container (if any)..."
+docker rm -f microfab >/dev/null 2>&1 || true
+
+docker network prune -f
 sleep 2
 
 echo "Starting blockchain using $MICROFAB_CFG_PATH configuration..."
@@ -41,6 +71,14 @@ cd api
 
 echo "Installing dependencies..."
 npm install
+
+# IPNS is NOT reset on init - previously published IPFS content remains visible.
+# To reset IPNS to empty (e.g. for a fresh demo), run: INIT_RESET_IPNS=1 ./init
+
+if [ "${INIT_RESET_IPNS}" = "1" ]; then
+  echo "Resetting IPNS to empty placeholder (INIT_RESET_IPNS=1)..."
+  node scripts/publish-empty-ipns.js
+fi
 
 echo -e "Initializing API..."
 node app
